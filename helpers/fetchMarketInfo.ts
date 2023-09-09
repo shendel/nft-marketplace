@@ -17,6 +17,7 @@ const fetchMarketInfo = (options) => {
     chainId,
     offset,
     limit,
+    collectionAddress,
     onlyTokens,
     userAddress,
   } = {

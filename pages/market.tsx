@@ -547,25 +547,15 @@ const Market: NextPage = (props) => {
                     tokenId,
                   } = tokenInfo
 
-                  if (tokensUrls[tokenId.toString()]) {
-                    return (
-                      <NftCard 
-                        key={index}
-                        collectionAddress={marketInfo.marketNft}
-                        mediaUrl={tokensUrls[tokenId.toString()] || false}
-                        tokenInfo={tokenInfo}
-                        price={123123}
-                      />
-                    )
-                  } else {
-                    return (
-                      <NftCardSceleton
-                        key={index}
-                        price={123132}
-                        tokenInfo={tokenInfo}
-                      />
-                    )
-                  }
+                  return (
+                    <NftCard 
+                      key={index}
+                      collectionAddress={marketInfo.marketNft}
+                      mediaUrl={tokensUrls[tokenId.toString()] || false}
+                      tokenInfo={tokenInfo}
+                      price={123123}
+                    />
+                  )
                 })}
               </>
             )}

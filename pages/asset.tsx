@@ -11,6 +11,9 @@ import { ipfsUrl } from "/helpers/ipfsUrl"
 import { fetchNftMetadata } from "/helpers/fetchNftMetadata"
 import fetchNftContent from "/helpers/fetchNftContent"
 
+import fetchNFTCollectionMeta from "/helpers/fetchNFTCollectionMeta"
+
+
 const MarketAsset: NextPage = (props) => {
   const {
     storageData,
@@ -23,23 +26,61 @@ const MarketAsset: NextPage = (props) => {
   const router = useRouter();
   const subRouter = (router.asPath.split('#')[1] || '').split('/');
   const [
-    collectionAddress,
-    tokenId,
+    _collectionAddress,
+    _tokenId,
+    _ownChainId
   ] = (router.asPath.split('#')[1] || '').split('/');
 
-
+  const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
+  const [ tokenId, setTokenId ] = useState(_tokenId)
+  const [ ownChainId, setOwnChainId ] = useState(_ownChainId)
+  
+  useEffect(() => {
+    const onHashChangeStart = (url) => {
+      const [
+        _collectionAddress,
+        _tokenId,
+        _ownChainId,
+      ] = (url.split('#')[1] || '').split('/');
+      setCollectionAddress(_collectionAddress)
+      setTokenId(_tokenId)
+      setOwnChainId(_ownChainId)
+    }
+    router.events.on("hashChangeStart", onHashChangeStart)
+    return () => { router.events.off("hashChangeStart", onHashChangeStart) }
+  }, [router.events])
   const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
   const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
   
-  const [ nftMetadataUrl, setNftMetadataUrl ] = useState(false)
-  const [ nftMetadataJson, setNftMetadataJson ] = useState(false)
+  
+  
+  
+  // Fetch collection base info
+  const [ collectionInfo, setCollectionInfo ] = useState(false)
+  useEffect(() => {
+    if (collectionAddress && (chainId || ownChainId)) {
+      setCollectionInfo(false)
+      fetchNFTCollectionMeta({
+        chainId: ownChainId || chainId,
+        address: collectionAddress,
+      }).then((_collectionInfo) => {
+        setCollectionInfo(_collectionInfo)
+      }).catch((err) => {
+        console.log('>>> fail fetch collection info', err)
+      })
+    }
+  }, [ collectionAddress, chainId, ownChainId] )
+  
 
   // Fetch token metadata url
+  const [ nftMetadataUrl, setNftMetadataUrl ] = useState(false)
   useEffect(() => {
-    if (collectionAddress && tokenId && chainId) {
+    if (collectionAddress && tokenId && (chainId || ownChainId)) {
+      setNftMetadataUrl(false)
+      setNftMetadataJson(false)
       fetchNftContent({
         address: collectionAddress,
-        chainId,
+        chainId: ownChainId || chainId,
         ids: [tokenId],
       }).then((_nftMetadataUrl) => {
         if (_nftMetadataUrl && _nftMetadataUrl[tokenId]) {
@@ -51,6 +92,7 @@ const MarketAsset: NextPage = (props) => {
     }
   }, [collectionAddress, tokenId])
   // Fetch token metadata json from url
+  const [ nftMetadataJson, setNftMetadataJson ] = useState(false)
   useEffect(() => {
     if (nftMetadataUrl) {
       fetchNftMetadata(ipfsUrl(nftMetadataUrl)).then((_nftMetadataJson) => {
@@ -134,7 +176,13 @@ const MarketAsset: NextPage = (props) => {
                     }}
                   />
                   */}
-                  <p className="truncate w-full mx-4 mt-[5px] opacity-50">MoonDAO Marketplace Featured Collection</p>
+                  <p className="truncate w-full mx-4 mt-[5px] opacity-50">
+                    {collectionInfo && collectionInfo.name ? (
+                      <>{collectionInfo.name}</>
+                    ) : (
+                      <>....</>
+                    )}
+                  </p>
                 </a>
               </div>
               <h1 className="font-GoodTimes font-medium text-[32px] break-words mb-2 mx-4 text-moon-white">
