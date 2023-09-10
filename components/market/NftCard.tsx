@@ -8,7 +8,7 @@ export default function NftCard(props) {
 
   console.log('>>>mediaUrl', mediaUrl)
 
-  return (mediaUrl !== false)
+  return (mediaUrl !== false) // @To-Do check sceleton
     ? (<NftCardLoaded {...props} />)
     : (<NftCardSceleton {...props} />)
 }

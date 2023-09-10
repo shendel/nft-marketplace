@@ -9,13 +9,15 @@ import Footer from "/components/market/Footer"
 
 import fetchNFTCollectionMeta from "/helpers/fetchNFTCollectionMeta"
 import fetchNftContent from '/helpers/fetchNftContent'
+import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
+
 import { ipfsUrl } from "/helpers/ipfsUrl"
+import Web3ObjectToArray from "/helpers/Web3ObjectToArray"
 
 import NftCardSceleton from "/components/market/NftCardSceleton"
 import NftCard from "/components/market/NftCard"
 
 import fetchMarketInfo from '/helpers/fetchMarketInfo'
-import Web3ObjectToArray from '/helpers/Web3ObjectToArray'
 
 
 
@@ -82,6 +84,7 @@ const MarketCollection: NextPage = (props) => {
   const [ tokensAtSale, setTokensAtSale ] = useState([])
   const [ tokensAtSaleFetching, setTokensAtSaleFetching ] = useState(true)
   
+  
   useEffect(() => {
     if (chainId && marketplaceContract) {
       fetchMarketInfo({
@@ -103,6 +106,21 @@ const MarketCollection: NextPage = (props) => {
       })
     }
   }, [ chainId, marketplaceContract, collectionAddress ])
+  // Fetch info about allowed erc20
+  const [ allowedERC20Info, setAllowedERC20Info ] = useState(false)
+  
+  useEffect(() => {
+    if (marketInfo) {
+      fetchTokensListInfo({
+        erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
+        chainId,
+      }).then((answ) => {
+        setAllowedERC20Info(answ)
+      }).catch((err) => {
+        console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
+      })
+    }
+  }, [ marketInfo ])
   // Fetch tokens URIs
   const [ tokensUrls, setTokensUrls ] = useState({})
   
@@ -113,7 +131,6 @@ const MarketCollection: NextPage = (props) => {
         chainId,
         ids: tokenIds
       }).then((urls) => {
-        console.log('>>> tokensUrls', urls)
         setTokensUrls({
           ...tokensUrls,
           ...urls
@@ -196,13 +213,13 @@ const MarketCollection: NextPage = (props) => {
                 } = tokenInfo
 
                 return (
-                  <div>
+                  <div key={index}>
                     <NftCard 
-                      key={index}
                       collectionAddress={marketInfo.marketNft}
                       mediaUrl={tokensUrls[tokenId.toString()] || false}
                       tokenInfo={tokenInfo}
-                      price={123123}
+                      allowedERC20Info={allowedERC20Info}
+                      chainId={chainId}
                     />
                   </div>
                 )

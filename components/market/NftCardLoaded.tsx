@@ -4,19 +4,46 @@ import  fetch from "node-fetch"
 import { ipfsUrl } from "/helpers/ipfsUrl"
 import { getLink } from "/helpers/getLink"
 import { useRouter } from "next/router"
+import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
+import { fromWei } from "/helpers/wei"
 
 export default function NftCard(props) {
   const router = useRouter()
   const {
     mediaUrl,
-    price,
+    allowedERC20Info,
     collectionAddress,
-    tokenInfo
+    tokenInfo,
+    chainId,
   } = props
   
-  const image = ''
-  console.log('>>>mediaUrl', mediaUrl)
-  
+  const chainInfo = CHAIN_INFO(chainId)
+  const {
+    price,
+    erc20,
+  } = tokenInfo
+
+  const viewPrice = (
+    <>
+      {erc20 !== ZERO_ADDRESS && allowedERC20Info && !allowedERC20Info[erc20] ? (
+        <>...</>
+      ) : (
+        <>
+          {allowedERC20Info !== false ? (
+            <>
+              {fromWei(price, (erc20 === ZERO_ADDRESS) ? chainInfo.nativeCurrency.decimals : allowedERC20Info[erc20].decimals)}
+              {` `}
+              {(erc20 === ZERO_ADDRESS) ? chainInfo.nativeCurrency.symbol : allowedERC20Info[erc20].symbol}
+            </>
+          ) : (
+            <>{`...`}</>
+          )}
+        </>
+      )}
+    </>
+  )
+ 
+
   const [ isFetched, setIsFetched ] = useState(false)
   const [ isFetching, setIsFetching ] = useState(true)
   const [ isImageUrl, setIsImageUrl ] = useState(false)
@@ -122,6 +149,7 @@ export default function NftCard(props) {
             </h6>
             <p className="mt-11 text-xl flex items-center gap-3 truncate">
               {/*<!-- CURRENCY ICON -->*/}
+              {/*
               <svg xmlns="http://www.w3.org/2000/svg" width="24.54" height="24.07" viewBox="0 0 350 365" fill="none" className="">
                 <path fill="#00156A" d="M332.21 295.813V67.692a267.979 267.979 0 0 0-157.325-51.039A267.98 267.98 0 0 0 17.559 67.692v228.121a268.057 268.057 0 0 0 157.326 51.02 268.054 268.054 0 0 0 157.325-51.02Z"></path>
                 <path fill="#F7931E" d="M107.87 181.547c32.269 0 58.428-26.148 58.428-58.403 0-32.255-26.159-58.403-58.428-58.403S49.443 90.89 49.443 123.144c0 32.255 26.159 58.403 58.427 58.403Z"></path>
@@ -144,7 +172,9 @@ export default function NftCard(props) {
                     <stop offset="0.78" stop-color="#D7594F"></stop>
                   </lineargradient>
                 </defs>
-              </svg>{price}
+              </svg>
+              */}
+              {viewPrice}
             </p>
           </div>
           <div className="mt-5 pr-9 flex flex-col items-end">

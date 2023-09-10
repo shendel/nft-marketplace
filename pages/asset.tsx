@@ -3,16 +3,25 @@ import { useRouter } from "next/router"
 import useStorage from "../storage/"
 import { useEffect, useState } from "react"
 import styles from "/styles/market.js"
-
+import { getLink } from "/helpers/"
 import Header from "/components/market/Header"
 import Footer from "/components/market/Footer"
 
 import { ipfsUrl } from "/helpers/ipfsUrl"
+import Web3ObjectToArray from "/helpers/Web3ObjectToArray"
+import { toWei, fromWei } from "/helpers/wei"
+
 import { fetchNftMetadata } from "/helpers/fetchNftMetadata"
+
 import fetchNftContent from "/helpers/fetchNftContent"
 
 import fetchNFTCollectionMeta from "/helpers/fetchNFTCollectionMeta"
+import fetchMarketTokenInfo from "/helpers/fetchMarketTokenInfo"
+import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
 
+import SellerInfo from "/components/market/SellerInfo"
+
+import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 
 const MarketAsset: NextPage = (props) => {
   const {
@@ -34,7 +43,7 @@ const MarketAsset: NextPage = (props) => {
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
   const [ tokenId, setTokenId ] = useState(_tokenId)
   const [ ownChainId, setOwnChainId ] = useState(_ownChainId)
-  
+  // HAsH ROUTER
   useEffect(() => {
     const onHashChangeStart = (url) => {
       const [
@@ -44,6 +53,9 @@ const MarketAsset: NextPage = (props) => {
       ] = (url.split('#')[1] || '').split('/');
       setCollectionAddress(_collectionAddress)
       setTokenId(_tokenId)
+      setMarketTokenInfo(false)
+      setSellCurrency(false)
+      setIsSellCurrencyFetched(false)
       setOwnChainId(_ownChainId)
     }
     router.events.on("hashChangeStart", onHashChangeStart)
@@ -51,14 +63,63 @@ const MarketAsset: NextPage = (props) => {
   }, [router.events])
   const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
   const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
+  // ---- END HASH ROUTER -----
+
+  // Fetch token info from market
+  const [ marketTokenInfo, setMarketTokenInfo ] = useState(false)
+
+  useEffect(() => {
+    if (chainId && tokenId && collectionAddress && marketplaceContract) {
+      fetchMarketTokenInfo({
+        marketAddress: marketplaceContract,
+        chainId,
+        collectionAddress,
+        tokenId,
+      }).then((answ) => {
+        console.log('>>> market token info', answ)
+        if (answ?.tokenInfo) setMarketTokenInfo(answ.tokenInfo)
+      }).catch((err) => {
+        console.log('>>> Fail fetch market token info', err)
+      })
+    }
+  }, [ collectionAddress, chainId, tokenId, marketplaceContract ])
   
-  
-  
-  
+  const [ sellCurrency , setSellCurrency ] = useState(`...`)
+  const [ isSellCurrencyFetched, setIsSellCurrencyFetched ] = useState(false)
+
+  useEffect(() => {
+    if (marketTokenInfo && chainId) {
+      console.log('>> ok')
+      if (marketTokenInfo.erc20 === ZERO_ADDRESS) {
+        const chainInfo = CHAIN_INFO(chainId)
+        setSellCurrency(chainInfo.nativeCurrency)
+        setIsSellCurrencyFetched(true)
+      } else {
+        fetchTokensListInfo({
+          erc20list: [ marketTokenInfo.erc20] ,
+          chainId,
+          // @To-Do - add check allowance when logged in
+          /*
+          withAllowance: true
+          */
+        }).then((answ) => {
+          if (answ && answ[marketTokenInfo.erc20] && answ[marketTokenInfo.erc20].symbol) {
+            setSellCurrency(answ[marketTokenInfo.erc20])
+          }
+          setIsSellCurrencyFetched(true)
+          console.log('>> allowedERC20', answ)
+        }).catch((err) => {
+          setIsSellCurrencyFetched(true)
+          console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
+        })
+      }
+    }
+  }, [ marketTokenInfo, chainId ])
   // Fetch collection base info
   const [ collectionInfo, setCollectionInfo ] = useState(false)
   useEffect(() => {
     if (collectionAddress && (chainId || ownChainId)) {
+      console.log('>>> RELOAD COLLECTION')
       setCollectionInfo(false)
       fetchNFTCollectionMeta({
         chainId: ownChainId || chainId,
@@ -76,6 +137,7 @@ const MarketAsset: NextPage = (props) => {
   const [ nftMetadataUrl, setNftMetadataUrl ] = useState(false)
   useEffect(() => {
     if (collectionAddress && tokenId && (chainId || ownChainId)) {
+      console.log('>>> RELOAD COLLECTION META')
       setNftMetadataUrl(false)
       setNftMetadataJson(false)
       fetchNftContent({
@@ -163,7 +225,7 @@ const MarketAsset: NextPage = (props) => {
             </div>
             <div className="relative w-full max-w-full top-0 tablet:flex-shrink tablet:sticky tablet:min-w-[370px] tablet:max-w-[450px] tablet:mt-4 tablet:mr-4">
               <div className="flex items-center mb-2">
-                <a href="https://market.moondao.com/collection/0xE71f58663f80b61f5D127D9DE9d554ca66dED5f1">
+                <a href={getLink(`collection`, collectionAddress)}>
                   {/* Collection image */}
                   {/*
                   <img
@@ -197,25 +259,20 @@ const MarketAsset: NextPage = (props) => {
                   {tokenId}
                 </p>
               </div>
-              <div className="flex items-center mb-2 mt-6 gap-2 transition-opacity duration-200 ease-in-out mx-4">
-                <div 
-                  className="mt-4 w-[48px] h-[48px] rounded-[50%] opacity-90 border-2 border-white border-opacity-20"
-                  style={{
-                    background: 'linear-gradient(90deg, #D194B9, #52D29D)',
-                  }}
-                ></div>
-                <div className="m-0 p-0 ml-[6px] flex flex-col h-full mt-4">
-                  <div>
-                    <p className="text-white opacity-60 mt-1 p-[2px]">Seller</p>
-                    <p className="font-semibold m-0 text-white text-opacity-90">0xEB25F9...833B</p>
-                  </div>
-                </div>
-              </div>
+              <SellerInfo address={marketTokenInfo?.seller} />
               <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
                 <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
                   <p className="text-white opacity-60 mt-1 p-[2px]">Price</p>
                   <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
-                    29000 MOONEY 
+                    {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
+                      <>
+                        {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                        {` `}
+                        {sellCurrency.symbol}
+                      </>
+                    ) : (
+                      <>{`...`}</>
+                    )}
                     <p
                       className="text-white opacity-60 mt-1 p-[2px]" 
                       style={{marginTop: '12px'}}

@@ -60,8 +60,6 @@ const Market: NextPage = (props) => {
   const [ marketInfo, setMarketInfo ] = useState({})
   const [ marketInfoFetched, setMarketInfoFetched ] = useState(false)
 
-  const [ allowedERC20Info, setAllowedERC20Info ] = useState({}) 
-
   const [activeChainId, setActiveChainId] = useState(false)
   const [activeWeb3, setActiveWeb3] = useState(false)
   const [address, setAddress] = useState(false)
@@ -278,35 +276,6 @@ const Market: NextPage = (props) => {
   }
 
 
-  const [ allowedERC20InfoFetching, setAllowedERC20InfoFetching ] = useState(false)
-  const [ allowedERC20InfoFetched, setAllowedERC20InfoFetched ] = useState(false)
-  useEffect(() => {
-    if (marketInfo && marketInfoFetched) {
-      if (Web3ObjectToArray(marketInfo.allowedERC20).length > 0) {
-        setAllowedERC20InfoFetching(true)
-        setAllowedERC20InfoFetched(false)
-        fetchTokensListInfo({
-          erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
-          chainId,
-          withAllowance: (address) ? {
-            allowanceFrom: address,
-            allowanceTo: marketplaceContract
-          } : false
-        }).then((answ) => {
-          setAllowedERC20Info(answ)
-          setAllowedERC20InfoFetching(false)
-          setAllowedERC20InfoFetched(true)
-        }).catch((err) => {
-          console.log('Fail fetch allowed erc20 info', err)
-          setAllowedERC20InfoFetched(true)
-          setAllowedERC20InfoFetching(false)
-        })
-      } else {
-        setAllowedERC20InfoFetched(true)
-      }
-    }
-  }, [ marketInfo ])
-
 
   const processError = (error, error_namespace) => {
     let metamaskError = false
@@ -467,30 +436,21 @@ const Market: NextPage = (props) => {
   const chainInfo = CHAIN_INFO(chainId)
   const nativeCurrency = chainInfo.nativeCurrency
   
+  // Fetch info about allowed erc20
+  const [ allowedERC20Info, setAllowedERC20Info ] = useState(false)
+  
   useEffect(() => {
-    if (marketInfo && marketInfoFetched) {
-      if (Web3ObjectToArray(marketInfo.allowedERC20).length > 0) {
-        setAllowedERC20InfoFetching(true)
-        setAllowedERC20InfoFetched(false)
-        fetchTokensListInfo({
-          erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
-          chainId,
-          withAllowance: (address) ? {
-            allowanceFrom: address,
-            allowanceTo: marketplaceContract
-          } : false
-        }).then((answ) => {
-          setAllowedERC20Info(answ)
-          setAllowedERC20InfoFetching(false)
-          setAllowedERC20InfoFetched(true)
-        }).catch((err) => {
-          console.log('Fail fetch allowed erc20 info', err)
-          setAllowedERC20InfoFetched(true)
-          setAllowedERC20InfoFetching(false)
-        })
-      } else {
-        setAllowedERC20InfoFetched(true)
-      }
+    if (marketInfo) {
+      console.log('>>> do fetch allowed')
+      fetchTokensListInfo({
+        erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
+        chainId,
+      }).then((answ) => {
+        console.log('>>> allowed', answ)
+        setAllowedERC20Info(answ)
+      }).catch((err) => {
+        console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
+      })
     }
   }, [ marketInfo ])
   
@@ -553,7 +513,8 @@ const Market: NextPage = (props) => {
                       collectionAddress={marketInfo.marketNft}
                       mediaUrl={tokensUrls[tokenId.toString()] || false}
                       tokenInfo={tokenInfo}
-                      price={123123}
+                      allowedERC20Info={allowedERC20Info}
+                      chainId={chainId}
                     />
                   )
                 })}
