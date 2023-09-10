@@ -227,17 +227,17 @@ const MarketAsset: NextPage = (props) => {
               <div className="flex items-center mb-2">
                 <a href={getLink(`collection`, collectionAddress)}>
                   {/* Collection image */}
-                  {/*
-                  <img
-                    className="!w-[36px] !h-[36px] rounded-lg mr-4 ml-3 mb-2"
-                    src="./Marketplace _ Asset_files/2.png"
-                    style={{
-                      objectFit: `contain`,
-                      width: `300px`,
-                      height: `300px`,
-                    }}
-                  />
-                  */}
+                  {collectionInfo && collectionInfo.image && (
+                    <img
+                      className="!w-[36px] !h-[36px] rounded-lg mr-4 ml-3 mb-2"
+                      src={ipfsUrl(collectionInfo.image)}
+                      style={{
+                        objectFit: `contain`,
+                        width: `300px`,
+                        height: `300px`,
+                      }}
+                    />
+                  )}
                   <p className="truncate w-full mx-4 mt-[5px] opacity-50">
                     {collectionInfo && collectionInfo.name ? (
                       <>{collectionInfo.name}</>

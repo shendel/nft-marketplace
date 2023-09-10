@@ -8,9 +8,9 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "_nft",
-						"type": "address"
+						"internalType": "address[]",
+						"name": "__collections",
+						"type": "address[]"
 					},
 					{
 						"internalType": "address",
@@ -48,6 +48,12 @@
 					},
 					{
 						"indexed": false,
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
+						"indexed": false,
 						"internalType": "uint256",
 						"name": "tokenId",
 						"type": "uint256"
@@ -75,6 +81,12 @@
 						"indexed": false,
 						"internalType": "address",
 						"name": "buyer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "collection",
 						"type": "address"
 					},
 					{
@@ -142,6 +154,12 @@
 					},
 					{
 						"indexed": false,
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
+						"indexed": false,
 						"internalType": "uint256",
 						"name": "tokenId",
 						"type": "uint256"
@@ -163,6 +181,12 @@
 						"indexed": false,
 						"internalType": "address",
 						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "collection",
 						"type": "address"
 					},
 					{
@@ -236,6 +260,12 @@
 					},
 					{
 						"indexed": false,
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
+						"indexed": false,
 						"internalType": "uint256",
 						"name": "tokenId",
 						"type": "uint256"
@@ -266,8 +296,13 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
 						"internalType": "uint256",
-						"name": "_tokenId",
+						"name": "tokenId",
 						"type": "uint256"
 					}
 				],
@@ -279,8 +314,13 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
 						"internalType": "uint256",
-						"name": "_tokenId",
+						"name": "tokenId",
 						"type": "uint256"
 					}
 				],
@@ -292,14 +332,32 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
 						"internalType": "uint256",
-						"name": "_tokenId",
+						"name": "tokenId",
 						"type": "uint256"
 					}
 				],
 				"name": "deSellNFT",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getAllowedCollections",
+				"outputs": [
+					{
+						"internalType": "contract IERC721[]",
+						"name": "",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -316,24 +374,22 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "getFeeReceiver",
-				"outputs": [
+				"inputs": [
 					{
 						"internalType": "address",
-						"name": "",
+						"name": "collection",
 						"type": "address"
 					}
 				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getMyTokensAtSale",
+				"name": "getCollectionTokensAtSale",
 				"outputs": [
 					{
 						"components": [
+							{
+								"internalType": "address",
+								"name": "collection",
+								"type": "address"
+							},
 							{
 								"internalType": "uint256",
 								"name": "tokenId",
@@ -369,22 +425,29 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
+				"inputs": [],
+				"name": "getFeeReceiver",
+				"outputs": [
 					{
-						"internalType": "uint256",
-						"name": "offset",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "limit",
-						"type": "uint256"
+						"internalType": "address",
+						"name": "",
+						"type": "address"
 					}
 				],
-				"name": "getTokensAtSale",
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getMyTokensAtSale",
 				"outputs": [
 					{
 						"components": [
+							{
+								"internalType": "address",
+								"name": "collection",
+								"type": "address"
+							},
 							{
 								"internalType": "uint256",
 								"name": "tokenId",
@@ -412,7 +475,52 @@
 							}
 						],
 						"internalType": "struct Marketplace.SelledNFT[]",
-						"name": "ret",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getTokensAtSale",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "collection",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "seller",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "price",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "erc20",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "utx",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct Marketplace.SelledNFT[]",
+						"name": "",
 						"type": "tuple[]"
 					}
 				],
@@ -457,6 +565,11 @@
 				"outputs": [
 					{
 						"components": [
+							{
+								"internalType": "address",
+								"name": "collection",
+								"type": "address"
+							},
 							{
 								"internalType": "uint256",
 								"name": "tokenId",
@@ -524,13 +637,56 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "marketNft",
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "marketTokensGet",
 				"outputs": [
 					{
-						"internalType": "contract IERC721",
-						"name": "",
-						"type": "address"
+						"components": [
+							{
+								"internalType": "address",
+								"name": "collection",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "tokenId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "seller",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "price",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "erc20",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "utx",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct Marketplace.SelledNFT",
+						"name": "ret",
+						"type": "tuple"
 					}
 				],
 				"stateMutability": "view",
@@ -572,6 +728,11 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
 						"internalType": "uint256",
 						"name": "_tokenId",
 						"type": "uint256"
@@ -588,6 +749,19 @@
 					}
 				],
 				"name": "sellNFT",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address[]",
+						"name": "_newCollections",
+						"type": "address[]"
+					}
+				],
+				"name": "setAllowedCollections",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -727,11 +901,11 @@
 	},
 	"sources": {
 		"source/Marketplace.sol": {
-			"keccak256": "0x803c9d36144cb3ddaefdd1c9b71ef2f4e517804cec7119183be39e7845923fde",
+			"keccak256": "0x0c0fb765e8629436cb1e3bb5a93dda0bd60bc7c0a332a584344bc552fe9b62fa",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ca4eff55500329671498d36c368729bce57e322c84be19ab025ee137480b2c3d",
-				"dweb:/ipfs/QmejZVHTvvjSyV32FbFNYnki4dtBoLJnM23c9ESdrjoiZD"
+				"bzz-raw://70e7b24645f6c0494bba8a1bdd91601d65f5b0fde925ae82665bb82e731efdaa",
+				"dweb:/ipfs/QmUhQbvnNa6Xcrr6Fd3d1NWMFtaTY62rRBRctMyr5W58qD"
 			]
 		}
 	},

@@ -1385,25 +1385,24 @@ abstract contract Pausable is Context {
 contract Marketplace is Ownable, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    event Buy(address owner, address buyer, uint256 tokenId,  uint256 price);
-    event BuyWithERC20(address owner, address buyer, uint256 tokenId, address erc20, uint256 price);
-    event PutUpForSale(address owner, uint256 tokenId, uint256 price);
-    event PutUpForSaleWithERC20(address owner, uint256 tokenId, address erc20, uint256 price);
-    event WithdrawFromSale(address owner, uint256 tokenId);
+    event Buy(address owner, address buyer, address collection, uint256 tokenId,  uint256 price);
+    event BuyWithERC20(address owner, address buyer, address collection, uint256 tokenId, address erc20, uint256 price);
+    event PutUpForSale(address owner, address collection, uint256 tokenId, uint256 price);
+    event PutUpForSaleWithERC20(address owner, address collection, uint256 tokenId, address erc20, uint256 price);
+    event WithdrawFromSale(address owner, address collection, uint256 tokenId);
     event WithdrawWei(address to, uint256 amount);
     event WithdrawERC20(address to, address erc20, uint256 amount);
     
     struct SelledNFT {
-        uint256 tokenId;
-        address seller;
-        uint256 price;
+        address collection; // NFT коллекция
+        uint256 tokenId;    // ID токена
+        address seller;     // Продавец
+        uint256 price;      // Цена (wei)
         address erc20;      // Если указано - продается за токены
-        uint256 utx;
+        uint256 utx;        // Время истечения лота (0 - бессрочный)
     }
 
-    IERC721 public marketNft;
-
-    uint public version = 1;
+    uint constant public version = 1;
 
     uint private _tradeFee = 0;
 
@@ -1411,48 +1410,78 @@ contract Marketplace is Ownable, Pausable {
         return true;
     }
 
-    mapping(uint256 => bool) private _isTokensAtSale;
-    mapping(uint256 => SelledNFT) private _tokensAtSale;
+    IERC721[] private _marketCollections;
+    mapping(address => bool) private _allowedCollections;
 
     address[] private _allowedERC20;
 
-    uint256[] private _tokensIdsAtSale;
+    SelledNFT[] private _marketTokens;
+
+    mapping(address => uint256) private _collectionTokensCount;
+
+    mapping(address => uint256) private _userTokensCount;
 
     address private _feeReceiver;
 
-    function __addTokenToSale(uint256 _tokenId) internal  {
-        _tokensIdsAtSale.push(_tokenId);
-    }
-    function __delTokenForSale(uint256 _tokenId) internal  {
-        if (_tokensIdsAtSale[_tokensIdsAtSale.length - 1] == _tokenId) {
-            _tokensIdsAtSale.pop();
-            return;
-        }
-        bool hasItem = false;
-        uint256 needIndex;
-        for(uint256 i = 0; i < _tokensIdsAtSale.length; i++) {
-            if (_tokensIdsAtSale[i] == _tokenId) {
-                hasItem = true;
-                needIndex = i;
-                break;
+    function marketTokensGet(address collection, uint256 tokenId) public view returns (SelledNFT memory ret) {
+        for(uint256 i = 0; i < _marketTokens.length; i++) {
+            if (
+                (_marketTokens[i].collection == collection)
+                &&
+                (_marketTokens[i].tokenId == tokenId)
+            ) {
+                return _marketTokens[i];
             }
         }
-        if (hasItem) {
-            _tokensIdsAtSale[needIndex] = _tokensIdsAtSale[_tokensIdsAtSale.length-1];
-            _tokensIdsAtSale.pop();
+        return ret;
+    }
+
+    function _marketTokensAdd(SelledNFT memory lotInfo) internal {
+        _marketTokens.push(lotInfo);
+        _collectionTokensCount[lotInfo.collection]++;
+        _userTokensCount[lotInfo.seller]++;
+    }
+    function _marketTokensDel(address collection, uint256 tokenId) internal {
+        if (
+            (_marketTokens[_marketTokens.length - 1].collection == collection)
+            &&
+            (_marketTokens[_marketTokens.length - 1].tokenId == tokenId)
+        ) {
+            _userTokensCount[_marketTokens[_marketTokens.length -1].seller]--;
+            _collectionTokensCount[collection]--;
+            _marketTokens.pop();
+        }
+        for(uint256 i = 0; i < _marketTokens.length; i++) {
+            if (
+                (_marketTokens[i].collection == collection)
+                &&
+                (_marketTokens[i].tokenId == tokenId)
+            ) {
+                _userTokensCount[_marketTokens[i].seller]--;
+                _collectionTokensCount[collection]--;
+                _marketTokens[i] = _marketTokens[_marketTokens.length -1];
+                _marketTokens.pop();
+                
+                return;
+            }
         }
     }
 
+    
+
     constructor(
-        address _nft,
+        address[] memory __collections,
         address __feeReceiver,
         uint __tradeFee,
         address[] memory __allowedERC20
     ) {
-        marketNft = IERC721(_nft);
+        for(uint i = 0; i < __collections.length; i++) {
+            _allowedCollections[__collections[i]] = true;
+            _marketCollections.push(IERC721(__collections[i]));
+        }
+        _feeReceiver = (__feeReceiver == address(0)) ? msg.sender : __feeReceiver;
         _tradeFee = __tradeFee;
         _allowedERC20 = __allowedERC20;
-        _feeReceiver = (__feeReceiver == address(0)) ? msg.sender : __feeReceiver;
     }
 
     function getFeeReceiver() public view returns(address) {
@@ -1461,6 +1490,21 @@ contract Marketplace is Ownable, Pausable {
     function setFeeReceiver(address _newFeeReceiver) public onlyOwner {
         _feeReceiver = _newFeeReceiver;
     }
+
+    function getAllowedCollections() public view returns(IERC721[] memory) {
+        return _marketCollections;
+    }
+    function setAllowedCollections(address[] memory _newCollections) public onlyOwner {
+        for(uint256 i = 0; i < _marketCollections.length; i++) {
+            _allowedCollections[address(_marketCollections[i])] = false;
+        }
+        delete _marketCollections;
+        for(uint256 i = 0; i < _newCollections.length; i++) {
+            _marketCollections.push(IERC721(_newCollections[i]));
+        }
+    }
+
+
     function setAllowedERC20(address[] memory newAllowedERC20) public onlyOwner {
         _allowedERC20 = newAllowedERC20;
     }
@@ -1496,97 +1540,69 @@ contract Marketplace is Ownable, Pausable {
         _tradeFee = _newTradeFee;
     }
 
-
-    function _clearSellToken(uint256 _tokenId) internal  {
-        _tokensAtSale[_tokenId] = SelledNFT(0, address(0), 0, address(0), 0);
-    }
-
-    function getMyTokensAtSale() external view returns (SelledNFT[] memory ret) {
+    function getMyTokensAtSale() public view returns(SelledNFT[] memory) {
         return getUserTokensAtSale(msg.sender);
     }
-
     function getUserTokensAtSale(address seller)
         public view
         returns (SelledNFT[] memory ret)
     {
-        uint256 _counter = 0;
-        for (uint256 i = 0; i < _tokensIdsAtSale.length; i++) {
-            if (_tokensAtSale[_tokensIdsAtSale[i]].seller == seller) _counter++;
-        }
-        SelledNFT[] memory _ret = new SelledNFT[](_counter);
-        _counter = 0;
-
-        for (uint256 i = 0; i < _tokensIdsAtSale.length; i++) {
-            if (_tokensAtSale[_tokensIdsAtSale[i]].seller == seller) {
-                SelledNFT memory _pushItem = SelledNFT(
-                    _tokensIdsAtSale[i],
-                    _tokensAtSale[_tokensIdsAtSale[i]].seller,
-                    _tokensAtSale[_tokensIdsAtSale[i]].price,
-                    _tokensAtSale[_tokensIdsAtSale[i]].erc20,
-                    _tokensAtSale[_tokensIdsAtSale[i]].utx
-                );
-                _ret[_counter] = _pushItem;
-                _counter++;
+        if (_userTokensCount[seller] > 0) {
+            ret = new SelledNFT[](_userTokensCount[seller]);
+            uint256 counter = 0;
+            for (uint256 i = 0; i < _marketTokens.length; i++) {
+                if (_marketTokens[i].seller == seller) {
+                    ret[counter] = _marketTokens[i];
+                    counter++;
+                }
             }
         }
-
-        return _ret;
+        return ret;
     }
 
     function getTokensAtSaleCount() public view returns (uint256) {
-        return _tokensIdsAtSale.length;
+        return _marketTokens.length;
     }
-
-    function getTokensAtSale(uint256 offset, uint256 limit)
-        external view
-        returns (SelledNFT[] memory ret)
-    {
-        uint256 iStart = offset;
-        uint256 iEnd = iStart + limit;
-        if (iStart >= _tokensIdsAtSale.length) return new SelledNFT[](0);
-        if (offset == 0 && limit == 0) iEnd = _tokensIdsAtSale.length;
-        if (iEnd > _tokensIdsAtSale.length) iEnd = _tokensIdsAtSale.length;
-        
-        uint256 count = iEnd - iStart;
-        uint256 ii = 0;
-        SelledNFT[] memory _ret = new SelledNFT[](count);
-        for (uint256 i = iStart; i < iEnd; i++) {
-            uint256 _tokenId = _tokensIdsAtSale[i];
-            SelledNFT memory _pushItem = SelledNFT(
-                _tokenId,
-                _tokensAtSale[_tokenId].seller,
-                _tokensAtSale[_tokenId].price,
-                _tokensAtSale[_tokenId].erc20,
-                _tokensAtSale[_tokenId].utx
-            );
-            _ret[ii] = _pushItem;
-            ii++;
+    function getTokensAtSale() public view returns (SelledNFT[] memory) {
+        return _marketTokens;
+    }
+    function getCollectionTokensAtSale(address collection) public view returns (SelledNFT[] memory ret) {
+        if (_collectionTokensCount[collection] > 0) {
+            ret = new SelledNFT[](_collectionTokensCount[collection]);
+            uint256 counter = 0;
+            for (uint256 i = 0; i < _marketTokens.length; i++) {
+                if (_marketTokens[i].collection == collection) {
+                    ret[counter] = _marketTokens[i];
+                    counter++;
+                }
+            }
         }
-        return _ret;
+        return ret;
     }
 
-    function buyNFTbyERC20(uint _tokenId)
+    function buyNFTbyERC20(address collection, uint tokenId)
         public
         whenNotPaused
     {
-        require(_isTokensAtSale[_tokenId] == true, "This NFT is not for sale");
-        require(_tokensAtSale[_tokenId].erc20 != address(0), "This token selled by Native coin");
+        SelledNFT memory lotInfo = marketTokensGet(collection, tokenId);
+        require(lotInfo.collection != address(0), "This NFT is not for sale");
+        require(lotInfo.erc20 != address(0), "This token selled by Native coin");
 
-        IERC20 payToken = IERC20(_tokensAtSale[_tokenId].erc20);
+        IERC20 payToken = IERC20(lotInfo.erc20);
         uint256 buyerBalance = payToken.balanceOf(msg.sender);
-        require(buyerBalance >= _tokensAtSale[_tokenId].price, "You do not have enough tokens on your balance to pay");
+        require(buyerBalance >= lotInfo.price, "You do not have enough tokens on your balance to pay");
         uint256 buyerAllowance = payToken.allowance(msg.sender, address(this));
-        require(buyerAllowance >= _tokensAtSale[_tokenId].price, "You did not allow the contract to send the purchase amount");
+        require(buyerAllowance >= lotInfo.price, "You did not allow the contract to send the purchase amount");
         
 
-        uint256 amount = _tokensAtSale[_tokenId].price;
+        uint256 amount = lotInfo.price;
         uint256 feeAmount = SafeMath.mul(SafeMath.div(amount, 100), _tradeFee);
-        if (_tokensAtSale[_tokenId].seller == owner()) feeAmount = 0;
+        if (lotInfo.seller == owner()) feeAmount = 0;
         uint256 amountWithFee = SafeMath.sub(amount, feeAmount);
 
         payToken.safeTransferFrom(
             address(msg.sender),
-            address(_tokensAtSale[_tokenId].seller),
+            address(lotInfo.seller),
             amountWithFee
         );
         if (feeAmount > 0) {
@@ -1596,47 +1612,51 @@ contract Marketplace is Ownable, Pausable {
                 feeAmount
             );
         }
-        marketNft.transferFrom(address(this), msg.sender, _tokenId);
-        _isTokensAtSale[_tokenId] = false;
-        _clearSellToken(_tokenId);
-        __delTokenForSale(_tokenId);
+        IERC721(lotInfo.collection).transferFrom(address(this), msg.sender, lotInfo.tokenId);
+        _marketTokensDel(collection, tokenId);
 
-        emit BuyWithERC20(_tokensAtSale[_tokenId].seller, msg.sender, _tokenId, _tokensAtSale[_tokenId].erc20, _tokensAtSale[_tokenId].price);
+        emit BuyWithERC20(
+            lotInfo.seller, 
+            msg.sender, 
+            lotInfo.collection,
+            lotInfo.tokenId,
+            lotInfo.erc20,
+            lotInfo.price
+        );
     }
 
 
-    function buyNFT(uint256 _tokenId)
+    function buyNFT(address collection, uint256 tokenId)
         public
         payable
         whenNotPaused
     {
-        // check - token is on sale
-        require(_isTokensAtSale[_tokenId] == true, "This NFT is not for sale");
+        SelledNFT memory lotInfo = marketTokensGet(collection, tokenId);
+        require( lotInfo.collection != address(0), "This NFT is not for sale");
         // check - price
-        require(msg.value >= _tokensAtSale[_tokenId].price, "You have not paid enough for this item");
+        require(msg.value >= lotInfo.price, "You have not paid enough for this item");
         // check this is not sell by ERC20
-        require(_tokensAtSale[_tokenId].erc20 == address(0), "This token selled by ERC20");
+        require(lotInfo.erc20 == address(0), "This token selled by ERC20");
         
         uint256 amount = msg.value;
         uint256 feeAmount = SafeMath.mul(SafeMath.div(amount, 100), _tradeFee);
-        if (_tokensAtSale[_tokenId].seller == owner()) feeAmount = 0;
+        if (lotInfo.seller == owner()) feeAmount = 0;
         uint256 amountWithFee = SafeMath.sub(amount, feeAmount);
 
-        payable(_tokensAtSale[_tokenId].seller).transfer(amountWithFee);
+        payable(lotInfo.seller).transfer(amountWithFee);
         if (feeAmount > 0) {
             payable(_feeReceiver).transfer(feeAmount);
         }
         
-        marketNft.transferFrom(address(this), msg.sender, _tokenId);
-        _isTokensAtSale[_tokenId] = false;
+        IERC721(lotInfo.collection).transferFrom(address(this), msg.sender, lotInfo.tokenId);
+        _marketTokensDel(collection, tokenId);
 
-        emit Buy(_tokensAtSale[_tokenId].seller, msg.sender, _tokenId, _tokensAtSale[_tokenId].price);
-
-        _clearSellToken(_tokenId);
-        __delTokenForSale(_tokenId);
+        emit Buy(lotInfo.seller, msg.sender, lotInfo.collection, lotInfo.tokenId, lotInfo.price);
+        
     }
 
     function sellNFT(
+        address collection,
         uint256 _tokenId,
         uint256 price,
         address _erc20
@@ -1644,8 +1664,14 @@ contract Marketplace is Ownable, Pausable {
         public
         whenNotPaused
     {
+        // Check collection allowed
         require(
-            marketNft.ownerOf(_tokenId) == msg.sender,
+            _allowedCollections[collection],
+            "Not allowed NFT collection"
+        );
+        // Check owner
+        require(
+            IERC721(collection).ownerOf(_tokenId) == msg.sender,
             "You don't own this token!"
         );
         require(price > 0, "Price must be greater than zero");
@@ -1654,35 +1680,33 @@ contract Marketplace is Ownable, Pausable {
             require(isAllowedERC20(_erc20) == true, "This ERC20 not allowed as a trading currency");
         }
 
-        _isTokensAtSale[_tokenId] = true;
-        _tokensAtSale[_tokenId] = SelledNFT(
+        SelledNFT memory newLot = SelledNFT(
+            collection,
             _tokenId,
             msg.sender,
             price,
             _erc20,
             block.timestamp
         );
-        marketNft.transferFrom(msg.sender, address(this), _tokenId);
-        __addTokenToSale(_tokenId);
+        IERC721(collection).transferFrom(msg.sender, address(this), _tokenId);
+        _marketTokensAdd(newLot);
 
         if (_erc20 == address(0)) {
-            emit PutUpForSaleWithERC20(msg.sender, _tokenId, _erc20, price);
+            emit PutUpForSaleWithERC20(msg.sender, collection, _tokenId, _erc20, price);
         } else {
-            emit PutUpForSale(msg.sender, _tokenId, price);
+            emit PutUpForSale(msg.sender, collection, _tokenId, price);
         }
     }
 
-    function deSellNFT(uint256 _tokenId) public {
+    function deSellNFT(address collection, uint256 tokenId) public {
+        SelledNFT memory token = marketTokensGet(collection, tokenId);
+        require( token.collection != address(0), "Token not founded at marketplace");
         if(msg.sender != owner()) {
-            require(msg.sender == _tokensAtSale[_tokenId].seller, "This is not your NFT");
+            require(msg.sender == token.seller, "This is not your NFT");
         }
+        IERC721(token.collection).transferFrom(address(this), token.seller, token.tokenId);
+        _marketTokensDel(token.collection,token.tokenId);
 
-        marketNft.transferFrom(address(this), _tokensAtSale[_tokenId].seller, _tokenId);
-
-        _isTokensAtSale[_tokenId] = false;        
-        _clearSellToken(_tokenId);
-        __delTokenForSale(_tokenId);
-        
-        emit WithdrawFromSale(_tokensAtSale[_tokenId].seller, _tokenId);
+        emit WithdrawFromSale(token.seller, token.collection, token.tokenId);
     }
 }
