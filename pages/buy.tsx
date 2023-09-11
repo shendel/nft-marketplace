@@ -492,7 +492,7 @@ const Market: NextPage = (props) => {
   
   const onSwitchViewType = () => {
     setViewType((viewType == VIEW_TYPE.ASSETS) ? VIEW_TYPE.COLLECTIONS : VIEW_TYPE.ASSETS)
-    const viewTypeLink = getLink('market', (viewType == VIEW_TYPE.ASSETS) ? `collections` : `assets`)
+    const viewTypeLink = getLink('buy', (viewType == VIEW_TYPE.ASSETS) ? `collections` : `assets`)
     router.push(viewTypeLink.replace('_MYAPP/',''))
   }
   

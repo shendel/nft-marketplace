@@ -9,7 +9,7 @@ import useStorage from "../storage/"
 import { useEffect, useState } from "react"
 
 
-const Home: NextPage = (props) => {
+const SellPage: NextPage = (props) => {
   const router = useRouter();
 
   return (
@@ -20,7 +20,7 @@ const Home: NextPage = (props) => {
       <div>
         <Header />
         <div className="pt-10 md:pt-12 lg:pt-16 xl:pt-20 m flex flex-col items-center w-full">
-          Index page
+          Sell page
         </div>
         <Footer />
       </div>
@@ -28,4 +28,4 @@ const Home: NextPage = (props) => {
   );
 };
 
-export default Home;
+export default SellPage;

@@ -8,16 +8,16 @@ export default function Header(props) {
   const links = [
     {
       title: 'Link 1',
-      href: 'https://ya.ru',
+      href: 'https://google.com',
       target: '_blank',
     },
     {
       title: 'Buy',
-      href: './market'
+      href: getLink(`buy`)
     },
     {
       title: 'Sell',
-      href: './sell'
+      href: getLink(`sell`)
     }
   ]
   
@@ -151,10 +151,10 @@ export default function Header(props) {
         <div></div>
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-7 xl:gap-9 2xl:gap-11">
-            <a className="lg:hidden" href="https://market.moondao.com/">
+            <a className="lg:hidden" href={getLink(`index`)}>
               <span>[LOGO]</span>
             </a>
-            <a className="hidden lg:block" href="https://market.moondao.com/">
+            <a className="hidden lg:block" href={getLink(`index`)}>
               <span>[LOGO]</span>
             </a>
           </div>
@@ -193,30 +193,38 @@ export default function Header(props) {
                     </button>
                   )}
                 </li>
-                <li>
-                  <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg">Link 1</a>
-                </li>
-                <li>
-                  <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg">Link 2</a>
-                </li>
-                <li>
-                  <a href={getLink(`market`)} className="hover:scale-105 hover:text-orange-500 inline-block text-lg">Buy</a>
-                </li>
-                <li>
-                  <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg">Sell</a>
-                </li>
-                
+                {links.map((link) => {
+                  const props = {
+                    className: 'hover:scale-105 hover:text-orange-500 inline-block text-lg',
+                    href: link.href,
+                    ...((link.target) ? {
+                      target: link.target,
+                    } : {})
+                  }
+                  return (
+                    <li>
+                      <a {...props}>{link.title}</a>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           </div>
           {/* Desktop menu */}
           <div className="hidden md:flex items-center">
             <div className="flex gap-7 lg:gap-9 xl:gap-14 2xl:gap-16">
-              <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/buy">Link 1</a>
-              <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/buy">Link 2</a>
-              <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" 
-                href="./market">Buy</a>
-              <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/sell">Sell</a>
+              {links.map((link) => {
+                const props = {
+                  className: 'hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150',
+                  href: link.href,
+                  ...((link.target) ? {
+                    target: link.target,
+                  } : {})
+                }
+                return (
+                  <a {...props}>{link.title}</a>
+                )
+              })}
             </div>
             <div className="ml-6 lg:ml-8 xl:ml-10 2xl:ml-12">
               {address && (
