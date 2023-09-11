@@ -23,6 +23,9 @@ import SellerInfo from "/components/market/SellerInfo"
 
 import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 
+import BuyButton from "/components/market/BuyButton"
+
+
 const MarketAsset: NextPage = (props) => {
   const {
     storageData,
@@ -312,11 +315,7 @@ const MarketAsset: NextPage = (props) => {
                 </div>
               </div>
               <div className="flex justify-evenly items-center">
-                <button className="connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3" data-theme="dark" data-is-loading="false" type="button" aria-label="Connect Wallet" data-test="connect-wallet-button" 
-                  style={{minWidth: '140px'}}
-                >
-                  Connect Wallet
-                </button>
+                <BuyButton />
               </div>
             </div>
           </div>

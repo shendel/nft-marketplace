@@ -32,7 +32,7 @@ export default function Header(props) {
     if (activeWeb3 && (`${activeChainId}` == `${chainId}`)) {
       window.tt = activeWeb3
       activeWeb3.eth.getAccounts().then((accounts) => {
-        setAddress(accounts[0])
+        setAddress(accounts[0] || false)
 
       }).catch((err) => {
         console.log('>>> initOnWeb3Ready', err)
@@ -45,14 +45,12 @@ export default function Header(props) {
       }
     }
   }
-  window.test = async () => {
-     const isConn = await isMetamaskConnected()
-     console.log(isConn)
-  }
+
   useEffect(() => {
-    console.log('>>> HEADER useEffect')
     initOnWeb3Ready()
   }, [ activeWeb3 ])
+  
+  onWalletChanged(() => { initOnWeb3Ready() })
   
   const connectWithMetamask = async () => {
     doConnectWithMetamask({
@@ -65,7 +63,6 @@ export default function Header(props) {
       },
       onError: (err) => {
         console.log(">>>> connectWithMetamask", err)
-        processError(err)
         setIsWalletConnecting(false)
       },
       needChainId: chainId,
