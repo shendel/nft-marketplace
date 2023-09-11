@@ -467,7 +467,6 @@ const Market: NextPage = (props) => {
         processError(err)
         setIsWalletConnecting(false)
       },
-      needChainId: chainId,
     })
   }
 

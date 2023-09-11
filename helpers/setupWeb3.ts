@@ -82,6 +82,11 @@ const setupWeb3 = () => new Promise((resolve, reject) => {
       } else {
         reject('FAIL_SETUP_WEB3')
       }
+    } else {
+      resolve({
+        activeChainId,
+        web3: false
+      })
     }
   } else {
     reject('NOT_INSTALLED')
@@ -99,9 +104,8 @@ const doConnectWithMetamask = async (options) => {
   } = options
 
   if (onBeforeConnect) onBeforeConnect()
-  
   try {
-    await window.ethereum.enable()
+    const enabledResult = await window.ethereum.enable()
     setupWeb3().then(async (answer) => {
       const {
         activeChainId, web3
@@ -119,7 +123,6 @@ const doConnectWithMetamask = async (options) => {
       } else {
         
         const _onSwitch = () => {
-          console.log('>>> after switch', needChainId)
           setupWeb3().then(async (afterSwitch) => {
             console.log('>>> afterSwitch', afterSwitch)
             if (`${afterSwitch.activeChainId}` === `${needChainId}`) {
@@ -146,6 +149,7 @@ const doConnectWithMetamask = async (options) => {
       if (onError) onError(err)
     })
   } catch (err) {
+    console.log('>>> doConnectWithMetamask err', err)
     if (onError) onError(err)
   }
 }

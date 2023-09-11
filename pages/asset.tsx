@@ -295,11 +295,13 @@ const MarketAsset: NextPage = (props) => {
                       {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
                       {` `}
                       {sellCurrency.symbol}
+                      {/*
                       <p
                         className="text-white opacity-60 mt-1 p-[2px]" 
                         style={{marginTop: '12px'}}
                       >Expiration</p>
                       <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">01.01.2030 @ 09:00:00</div>
+                      */}
                     </div>
                   ) : (
                     <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
@@ -314,9 +316,17 @@ const MarketAsset: NextPage = (props) => {
                   <div></div>
                 </div>
               </div>
-              <div className="flex justify-evenly items-center">
-                <BuyButton />
-              </div>
+              {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price && (
+                <div className="flex justify-evenly items-center">
+                  <BuyButton 
+                    chainId={chainId}
+                    marketplaceContract={marketplaceContract}
+                    marketTokenInfo={marketTokenInfo}
+                    price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                    currency={sellCurrency.symbol}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </article>

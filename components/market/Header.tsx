@@ -1,4 +1,4 @@
-import { setupWeb3, switchOrAddChain, doConnectWithMetamask, isMetamaskConnected, onWalletChanged } from "/helpers/setupWeb3"
+import { setupWeb3, switchOrAddChain, doConnectWithMetamask, isMetamaskConnected, onWalletChanged, getConnectedAddress } from "/helpers/setupWeb3"
 import { useEffect, useState } from "react"
 import FaIcon from "/components/FaIcon"
 import { getLink } from "/helpers/getLink"
@@ -28,7 +28,6 @@ export default function Header(props) {
   const chainId = 5
   
   const initOnWeb3Ready = async () => {
-    console.log('>>> initOnWeb3Ready')
     if (activeWeb3 && (`${activeChainId}` == `${chainId}`)) {
       window.tt = activeWeb3
       activeWeb3.eth.getAccounts().then((accounts) => {
@@ -36,12 +35,13 @@ export default function Header(props) {
 
       }).catch((err) => {
         console.log('>>> initOnWeb3Ready', err)
-        processError(err)
       })
     } else {
       const _isConnected = await isMetamaskConnected()
       if (_isConnected) {
         connectWithMetamask()
+      } else {
+        setAddress(false)
       }
     }
   }
@@ -56,16 +56,16 @@ export default function Header(props) {
     doConnectWithMetamask({
       onBeforeConnect: () => { setIsWalletConnecting(true) },
       onSetActiveChain: setActiveChainId,
-      onConnected: (cId, web3) => {
-        console.log('>>> on connected')
+      onConnected: async (cId, web3) => {
         setActiveWeb3(web3)
         setIsWalletConnecting(false)
+        if (!web3) {
+          setAddress(await getConnectedAddress())
+        }
       },
       onError: (err) => {
-        console.log(">>>> connectWithMetamask", err)
         setIsWalletConnecting(false)
       },
-      needChainId: chainId,
     })
   }
 
