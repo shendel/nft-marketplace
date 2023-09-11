@@ -83,6 +83,7 @@ const setupWeb3 = () => new Promise((resolve, reject) => {
         reject('FAIL_SETUP_WEB3')
       }
     } else {
+      console.log('>>> not supported network')
       resolve({
         activeChainId,
         web3: false

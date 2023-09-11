@@ -53,11 +53,13 @@ export default function Header(props) {
   onWalletChanged(() => { initOnWeb3Ready() })
   
   const connectWithMetamask = async () => {
+    console.log('>>> call connectWithMetamask')
     doConnectWithMetamask({
       onBeforeConnect: () => { setIsWalletConnecting(true) },
       onSetActiveChain: setActiveChainId,
       onConnected: async (cId, web3) => {
-        setActiveWeb3(web3)
+        console.log('>>> onConnected')
+        setActiveWeb3((`${cId}` == `${chainId}`) ? web3 : false)
         setIsWalletConnecting(false)
         if (!web3) {
           setAddress(await getConnectedAddress())
@@ -193,7 +195,7 @@ export default function Header(props) {
                     </button>
                   )}
                 </li>
-                {links.map((link) => {
+                {links.map((link, key) => {
                   const props = {
                     className: 'hover:scale-105 hover:text-orange-500 inline-block text-lg',
                     href: link.href,
@@ -202,7 +204,7 @@ export default function Header(props) {
                     } : {})
                   }
                   return (
-                    <li>
+                    <li key={key}>
                       <a {...props}>{link.title}</a>
                     </li>
                   )
@@ -213,7 +215,7 @@ export default function Header(props) {
           {/* Desktop menu */}
           <div className="hidden md:flex items-center">
             <div className="flex gap-7 lg:gap-9 xl:gap-14 2xl:gap-16">
-              {links.map((link) => {
+              {links.map((link, key) => {
                 const props = {
                   className: 'hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150',
                   href: link.href,
@@ -222,7 +224,7 @@ export default function Header(props) {
                   } : {})
                 }
                 return (
-                  <a {...props}>{link.title}</a>
+                  <a key={key} {...props}>{link.title}</a>
                 )
               })}
             </div>

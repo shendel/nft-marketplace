@@ -86,8 +86,8 @@ export default function BuyButton(options) {
       onBeforeConnect: () => { setIsWalletConnecting(true) },
       onSetActiveChain: setActiveChainId,
       onConnected: async (cId, web3) => {
-        setActiveWeb3(web3)
         setIsWalletConnecting(false)
+        setActiveWeb3((`${cId}` == `${chainId}`) ? web3 : false)
         if (!web3) {
           setAddress(await getConnectedAddress())
         }

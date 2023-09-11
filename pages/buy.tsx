@@ -447,14 +447,17 @@ const Market: NextPage = (props) => {
     }
   }, [storageData])
 
+/*
   useEffect(() => {
     if (activeWeb3 && chainId && marketplaceContract) {
       initOnWeb3Ready()
     }
   }, [activeWeb3, chainId, marketplaceContract])
+  */
 
 
   const connectWithMetamask = async () => {
+  /*
     doConnectWithMetamask({
       onBeforeConnect: () => { setIsWalletConnecting(true) },
       onSetActiveChain: setActiveChainId,
@@ -468,6 +471,7 @@ const Market: NextPage = (props) => {
         setIsWalletConnecting(false)
       },
     })
+    */
   }
 
   const chainInfo = CHAIN_INFO(chainId)
