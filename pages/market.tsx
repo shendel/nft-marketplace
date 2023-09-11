@@ -1,6 +1,7 @@
 import type { NextPage } from "next"
 import { useRouter } from "next/router"
 import { getLink, getAssets, getBoolOption, getIntOption } from "/helpers"
+import { ipfsUrl } from "/helpers/ipfsUrl"
 import useStorage from "/storage/"
 import { useEffect, useState } from "react"
 import styles from "/styles/market.js"
@@ -10,11 +11,15 @@ import Footer from "/components/market/Footer"
 
 import NftCardSceleton from "/components/market/NftCardSceleton"
 import NftCard from "/components/market/NftCard"
+import CollectionCard from "/components/market/CollectionCard"
 
 import { setupWeb3, switchOrAddChain, doConnectWithMetamask, isMetamaskConnected, onWalletChanged } from "../helpers/setupWeb3"
 import { calcSendArgWithFee } from "/helpers/calcSendArgWithFee"
 
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
+import fetchNFTManyCollectionInfo from "/helpers/fetchNFTManyCollectionInfo"
+import { fetchNftMetadata } from "/helpers/fetchNftMetadata"
+
 import callMPMethod from "/helpers/callMPMethod"
 import nftSaleToken from "/components/nftSaleToken"
 import { CHAIN_INFO, ZERO_ADDRESS } from "/helpers/constants"
@@ -28,13 +33,13 @@ import Paginator from "/components/Paginator"
 import Web3 from 'web3'
 import fetchMarketInfo from '/helpers/fetchMarketInfo'
 import fetchNftContent from '/helpers/fetchNftContent'
+import fetchManyNftContent from '/helpers/fetchManyNftContent'
+import fetchNFTManyCollectionMeta from "/helpers/fetchNFTManyCollectionMeta"
 import Web3ObjectToArray from '/helpers/Web3ObjectToArray'
 import { NftIsApproved } from '/helpers/nftApproveUtils'
 
 
 const Market: NextPage = (props) => {
-  const router = useRouter();
-
   const {
     storageData,
     storageData: {
@@ -42,11 +47,32 @@ const Market: NextPage = (props) => {
     },
     isOwner,
   } = props
-
+  /* HASH ROUTING */
+  const router = useRouter();
+  const subRouter = (router.asPath.split('#')[1] || '').split('/');
+  const VIEW_TYPE = {
+    ASSETS: `assets`,
+    COLLECTIONS: `collections`
+  }
+  const [
+    _viewType,
+  ] = (router.asPath.split('#')[1] || '').split('/');
+  const [ viewType, setViewType ] = useState(_viewType || VIEW_TYPE.ASSETS)
+  
+  useEffect(() => {
+    const onHashChangeStart = (url) => {
+      const [
+        _viewType,
+      ] = (url.split('#')[1] || '').split('/');
+      setViewType(_viewType || VIEW_TYPE.ASSETS)
+    }
+    return () => { router.events.off("hashChangeStart", onHashChangeStart) }
+  }, [router.events])
+  /* ---- END HASH ROUTING ----- */
+  
   const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
   const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
 
-  console.log('>>> marketplaceContract', marketplaceContract)
   
   const [ nftInfo, setNftInfo ] = useState({})
   const [ nftInfoFetched, setNftInfoFetched ] = useState(false)
@@ -70,25 +96,6 @@ const Market: NextPage = (props) => {
 
   const [ currentLot, setCurrentLot ] = useState(false)
   const [ isApproving, setIsApproving ] = useState(false)
-
-  const TABS = {
-    ALL: 'ALL',
-    USER: 'USER'
-  }
-
-  const [ activeTab, setActiveTab ] = useState(TABS.ALL)
-  const doSwitchTab = (tab) => {
-    setActiveTab(tab)
-    switch (tab) {
-      case TABS.ALL:
-        goToPage(0)
-        break;
-      case TABS.USER:
-        doFetchUserNfts()
-        doFetchOtherUserNfts()
-        break;
-    }
-  }
 
   const doApproveAndBuy = (lotIndex) => {
     addNotify(`Approving... Confirm transaction`)
@@ -122,21 +129,38 @@ const Market: NextPage = (props) => {
 
   const [ tokensUrls, setTokensUrls ] = useState({})
   
-  const doFetchTokenUrls = (tokenIds) => {
-    console.log('>>> call doFetchTokenUrls', tokenIds)
-    if (marketInfo && marketInfoFetched && marketInfo.marketNft) {
-      console.log('>>> call do')
-      fetchNftContent({
-        address: marketInfo.marketNft,
-        chainId,
-        ids: tokenIds
-      }).then((urls) => {
-        setTokensUrls({
-          ...tokensUrls,
-          ...urls
-        })
+
+  const doFetchTokenUrls = (tokensInfo) => {
+    const fetchArgs = {
+      chainId: marketInfo.chainId,
+      tokensInfo: tokensInfo.map((tokenInfo) => {
+        return {
+          address: tokenInfo.collection,
+          tokenId: tokenInfo.tokenId
+        }
       })
     }
+    fetchManyNftContent(
+      fetchArgs
+    ).then((answer) => {
+      setTokensUrls((newTokenUrls) => {
+        Object.keys(answer).forEach((address_id) => {
+          if (answer[address_id] !== false) {
+            const [ collection, tokenId ] = address_id.split(`_`)
+            newTokenUrls = {
+              ...newTokenUrls,
+              [collection]: {
+                ...newTokenUrls[collection],
+                [tokenId]: answer[address_id].tokenURI,
+              },
+            }
+          }
+        })
+        return newTokenUrls
+      })
+    }).catch((err) => {
+      console.log('>> err', err)
+    })
   }
   
   const [ isRemoveFromTrade, setIsRemoveFromTrade ] = useState(false)
@@ -356,16 +380,30 @@ const Market: NextPage = (props) => {
       }).then((info) => {
         setTokensAtSale(Web3ObjectToArray(info.tokensAtSale))
         setTokensAtSaleFetching(false)
-        doFetchTokenUrls(Web3ObjectToArray(info.tokensAtSale).map((tokenInfo) => { return tokenInfo.tokenId }))
+        doFetchTokenUrls(Web3ObjectToArray(info.tokensAtSale))
       })
     }
   }
 
+  const [ needRefreshTokens, setNeedRefreshTokens ] = useState(false)
+  useEffect(() => {
+    if (needRefreshTokens) {
+      setNeedRefreshTokens(false)
+      fetchMarketInfo({
+        address: marketplaceContract,
+        chainId,
+        onlyTokens: true,
+      }).then((info) => {
+        setTokensAtSale(Web3ObjectToArray(info.tokensAtSale))
+      })
+    }
+  }, [ needRefreshTokens ])
+  
   useEffect(() => {
     if (marketInfoFetched) {
-      doFetchTokenUrls(tokensAtSale.map((tokenInfo) => { return tokenInfo.tokenId }))
+      doFetchTokenUrls(tokensAtSale)
     }
-  }, [ marketInfoFetched ])
+  }, [ marketInfoFetched, tokensAtSale ])
 
   useEffect(() => {
     if (chainId && marketplaceContract) {
@@ -441,23 +479,114 @@ const Market: NextPage = (props) => {
   
   useEffect(() => {
     if (marketInfo) {
-      console.log('>>> do fetch allowed')
       fetchTokensListInfo({
         erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
         chainId,
       }).then((answ) => {
-        console.log('>>> allowed', answ)
         setAllowedERC20Info(answ)
       }).catch((err) => {
         console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
       })
     }
   }, [ marketInfo ])
+
   
-  console.log('>>> tokensAtSale',tokensAtSale)
-  const [ showCollection, setShowCollection ] = useState(false)
-  const onSwitchCollection = () => {
-    setShowCollection(!showCollection)
+  const onSwitchViewType = () => {
+    setViewType((viewType == VIEW_TYPE.ASSETS) ? VIEW_TYPE.COLLECTIONS : VIEW_TYPE.ASSETS)
+    const viewTypeLink = getLink('market', (viewType == VIEW_TYPE.ASSETS) ? `collections` : `assets`)
+    router.push(viewTypeLink.replace('_MYAPP/',''))
+  }
+  
+  useEffect(() => {
+    console.log('view type change', viewType)
+    if (viewType == VIEW_TYPE.ASSETS) {
+      setNeedRefreshTokens(true)
+    }
+    if (viewType == VIEW_TYPE.COLLECTIONS) {
+      setNeedRefreshCollections(true)
+    }
+  }, [viewType])
+
+  const [ collectionsInfo, setCollectionsInfo ] = useState({})
+  const [ collectionsMeta, setCollectionsMeta ] = useState({})
+  
+  const [ needRefreshCollections, setNeedRefreshCollections ] = useState(false)
+  
+  useEffect(() => {
+    if (Object.keys(collectionsInfo).length) {
+      const metaPromiseList = []
+      Object.keys(collectionsInfo)
+        .filter((nftAddress) => {
+          return collectionsMeta[nftAddress] === undefined
+        })
+        .forEach((nftAddress) => {
+          metaPromiseList.push( new Promise(async (resolve) => {
+            let collectionMetaJson = false
+            let collectionZeroJson = false
+            console.log('>>> collectionsInfo', nftAddress, collectionsInfo[nftAddress])
+            if (collectionsInfo[nftAddress].contractURI) {
+              try {
+                collectionMetaJson = await fetchNftMetadata(ipfsUrl(collectionsInfo[nftAddress].contractURI))
+              } catch (e) {}
+            }
+            if (collectionsInfo[nftAddress].zeroTokenURI) {
+              try {
+                collectionZeroJson = await fetchNftMetadata(ipfsUrl(collectionsInfo[nftAddress].zeroTokenURI))
+              } catch (e) {}
+            }
+            const collectionMeta = {
+              name: collectionMetaJson?.name || collectionZeroJson?.name || collectionsInfo[nftAddress].symbol || `-`,
+              description: collectionMetaJson?.description || collectionZeroJson.description || collectionsInfo[nftAddress].name || `-`,
+              image: collectionMetaJson?.image || collectionZeroJson.image || false,
+              totalSupply: collectionsInfo[nftAddress]?.totalSupply || 0,
+            }
+            
+            setCollectionsMeta((newMeta) => {
+              return {
+                ...newMeta,
+                [nftAddress]: collectionMeta,
+              } 
+            })
+            
+            console.log('>>> collectionMeta', collectionMeta)
+            resolve(true)
+          }) )
+        })
+      Promise.all(metaPromiseList).then((ready) => {
+        console.log('>>> ready', ready)
+      })
+    }
+  }, [ collectionsInfo ])
+  
+  useEffect(() => {
+    if (needRefreshCollections && marketInfo && marketInfo.chainId) {
+      setNeedRefreshCollections(false)
+      fetchNFTManyCollectionInfo({
+        addressList: Web3ObjectToArray(marketInfo.nftCollections),
+        chainId: marketInfo.chainId
+      }).then((answer) => {
+        console.log('>> answer', answer)
+        setCollectionsInfo({
+          ...collectionsInfo,
+          ...answer
+        })
+      }).catch((err) => {
+        console.log('>> err', err)
+      })
+    }
+  }, [ needRefreshCollections, marketInfo ])
+
+
+  window.doTest = () => {
+    fetchNFTManyCollectionMeta({
+      addressList: Web3ObjectToArray(marketInfo.nftCollections),
+      chainId: marketInfo.chainId
+    }).then((answer) => {
+      
+      console.log('>>> answer', answer)
+    }).catch((err) => {
+      console.log('>>> err', err)
+    })
   }
   return (
   <>
@@ -475,18 +604,18 @@ const Market: NextPage = (props) => {
           <div className="my-8 flex gap-6 sm:gap-8 lg:my-10 flex-col items-center sm:flex-row">
             <div className="flex gap-6">
               <div className="flex flex-col divide-y-2 text-left font-semibold tracking-wider">
-                <p className={`${(!showCollection) ? 'false' : 'opacity-60'} text-yellow-200 py-1 transition-all duration-150`}>Assets</p>
+                <p className={`${(viewType == VIEW_TYPE.ASSETS) ? 'false' : 'opacity-60'} text-yellow-200 py-1 transition-all duration-150`}>Assets</p>
                 <p className="text-indigo-300 py-1">
-                  <span className={`${(!showCollection) ? 'opacity-60' : 'false'} transition-all duration-150`}>
+                  <span className={`${(viewType == VIEW_TYPE.ASSETS) ? 'opacity-60' : 'false'} transition-all duration-150`}>
                     Collections
                   </span>
                 </p>
               </div>
 
-              <div className={`${(!showCollection) ? 'bg-moon-gold' : 'bg-indigo-600'} flex w-8 h-16 rounded-full ease-in-ease-out duration-150`}>
+              <div className={`${(viewType == VIEW_TYPE.ASSETS) ? 'bg-moon-gold' : 'bg-indigo-600'} flex w-8 h-16 rounded-full ease-in-ease-out duration-150`}>
                 <button
-                  onClick={onSwitchCollection} 
-                  className={`${(!showCollection) ? 'false' : 'translate-y-8'} w-9 h-9 bg-white rounded-full ease-in-ease-out duration-150`}
+                  onClick={onSwitchViewType} 
+                  className={`${(viewType == VIEW_TYPE.ASSETS) ? 'false' : 'translate-y-8'} w-9 h-9 bg-white rounded-full ease-in-ease-out duration-150`}
                 ></button>
               </div>
             </div>
@@ -498,28 +627,60 @@ const Market: NextPage = (props) => {
             </select>
             */}
           </div>
-          <p className="mt-[14px] lg:mt-6 text-xl opacity-80">Pick an asset</p>
+          <p className="mt-[14px] lg:mt-6 text-xl opacity-80">
+            {viewType == VIEW_TYPE.ASSETS && (<>{`Pick an asset`}</>)}
+            {viewType == VIEW_TYPE.COLLECTIONS && (<>{`Pick from a collection`}</>)}
+          </p>
           <section className="mt-10 md:mt-16 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
-            {!tokensAtSaleFetching && (
+            {viewType == VIEW_TYPE.ASSETS && (
               <>
-                {tokensAtSale.map((tokenInfo, index) => {
-                  const {
-                    tokenId,
-                  } = tokenInfo
+                {!tokensAtSaleFetching && (
+                  <>
+                    {tokensAtSale.map((tokenInfo, index) => {
+                      const {
+                        tokenId,
+                      } = tokenInfo
 
-                  return (
-                    <NftCard 
-                      key={index}
-                      collectionAddress={marketInfo.marketNft}
-                      mediaUrl={tokensUrls[tokenId.toString()] || false}
-                      tokenInfo={tokenInfo}
-                      allowedERC20Info={allowedERC20Info}
-                      chainId={chainId}
-                    />
-                  )
-                })}
+                      return (
+                        <NftCard 
+                          key={index}
+                          mediaUrl={
+                            (tokensUrls[tokenInfo.collection] && tokensUrls[tokenInfo.collection][tokenId.toString()])
+                            ? tokensUrls[tokenInfo.collection][tokenId.toString()]
+                            : false
+                          }
+                          tokenInfo={tokenInfo}
+                          allowedERC20Info={allowedERC20Info}
+                          chainId={chainId}
+                        />
+                      )
+                    })}
+                  </>
+                )}
               </>
             )}
+            {viewType == VIEW_TYPE.COLLECTIONS && (
+              <>
+                {marketInfo && marketInfo.nftCollections && (
+                  <>
+                    {Web3ObjectToArray(marketInfo.nftCollections).map((nftAddress) => {
+                      return (
+                        <CollectionCard 
+                          key={nftAddress}
+                          address={nftAddress}
+                          isLoading={collectionsInfo[nftAddress] === undefined}
+                          collectionInfo={collectionsInfo[nftAddress] || false}
+                          collectionMeta={collectionsMeta[nftAddress] || false}
+                        />
+                      )
+                    })}
+                  </>
+                )}
+              </>
+            )}
+            <article className="relative group overflow-hidden">
+              <div className="w-[335px] h-[275px] overflow-hidden"></div>
+            </article>
           </section>
         </div>
       </div>

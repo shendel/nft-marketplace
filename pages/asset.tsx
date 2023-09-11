@@ -197,25 +197,49 @@ const MarketAsset: NextPage = (props) => {
                     </>
                   )}
                 </p>
-                <h3 className="mt-8 mb-[15px] text-[23px] font-medium font-GoodTimes text-moon-gold">Traits</h3>
                 {nftMetadataJson && nftMetadataJson.attributes && nftMetadataJson.attributes.length && (
-                  <div className="py-3 flex flex-wrap gap-4 md:gap-5 mt-3">
-                    {nftMetadataJson.attributes.map((attr, index) => {
-                      if (attr && attr.trait_type && attr.value) {
-                        return (
-                          <div key={index} className="flex flex-col gap-[6px] rounded-lg bg-slate-900 text-center min-w-[128px] lg:min-w-[142px] min-h-[32px] lg:min-h-[38px] grow-0">
-                            <p className="text-moon-gold opacity-70 px-2 pt-1 pb-[2px] bg-[#030712] font-semibold uppercase tracking-widest text-sm">
-                              {attr.trait_type}
-                            </p>
-                            <p className="text-base px-2 pb-2 text-white tracking-wider text-[17px] font-mono capitalize">
-                              {attr.value}
-                            </p>
-                          </div>
-                        )
-                      } else return null
-                    })}
-                    <p></p>
-                  </div>
+                  <>
+                    <h3 className="mt-8 mb-[15px] text-[23px] font-medium font-GoodTimes text-moon-gold">Traits</h3>
+                    <div className="py-3 flex flex-wrap gap-4 md:gap-5 mt-3">
+                      {nftMetadataJson.attributes.map((attr, index) => {
+                        if (attr && attr.trait_type && attr.value) {
+                          return (
+                            <div key={index} className="flex flex-col gap-[6px] rounded-lg bg-slate-900 text-center min-w-[128px] lg:min-w-[142px] min-h-[32px] lg:min-h-[38px] grow-0">
+                              <p className="text-moon-gold opacity-70 px-2 pt-1 pb-[2px] bg-[#030712] font-semibold uppercase tracking-widest text-sm">
+                                {attr.trait_type}
+                              </p>
+                              <p className="text-base px-2 pb-2 text-white tracking-wider text-[17px] font-mono capitalize">
+                                {attr.value}
+                              </p>
+                            </div>
+                          )
+                        } else return null
+                      })}
+                      <p></p>
+                    </div>
+                  </>
+                )}
+                {nftMetadataJson && nftMetadataJson.properties && nftMetadataJson.properties.length && (
+                  <>
+                    <h3 className="mt-8 mb-[15px] text-[23px] font-medium font-GoodTimes text-moon-gold">Properties</h3>
+                    <div className="py-3 flex flex-wrap gap-4 md:gap-5 mt-3">
+                      {nftMetadataJson.properties.map((attr, index) => {
+                        if (attr && attr.type && attr.name) {
+                          return (
+                            <div key={index} className="flex flex-col gap-[6px] rounded-lg bg-slate-900 text-center min-w-[128px] lg:min-w-[142px] min-h-[32px] lg:min-h-[38px] grow-0">
+                              <p className="text-moon-gold opacity-70 px-2 pt-1 pb-[2px] bg-[#030712] font-semibold uppercase tracking-widest text-sm">
+                                {attr.type}
+                              </p>
+                              <p className="text-base px-2 pb-2 text-white tracking-wider text-[17px] font-mono capitalize">
+                                {attr.name}
+                              </p>
+                            </div>
+                          )
+                        } else return null
+                      })}
+                      <p></p>
+                    </div>
+                  </>
                 )}
                 {/*
                 <h3 className="mt-8 mb-[15px] text-[23px] font-medium font-GoodTimes text-moon-gold">History</h3>
@@ -263,22 +287,27 @@ const MarketAsset: NextPage = (props) => {
               <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
                 <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
                   <p className="text-white opacity-60 mt-1 p-[2px]">Price</p>
-                  <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
-                    {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
-                      <>
-                        {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
-                        {` `}
-                        {sellCurrency.symbol}
-                      </>
-                    ) : (
-                      <>{`...`}</>
-                    )}
-                    <p
-                      className="text-white opacity-60 mt-1 p-[2px]" 
-                      style={{marginTop: '12px'}}
-                    >Expiration</p>
-                    <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">01.01.2030 @ 09:00:00</div>
-                  </div>
+                  {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
+                    <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
+                      {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                      {` `}
+                      {sellCurrency.symbol}
+                      <p
+                        className="text-white opacity-60 mt-1 p-[2px]" 
+                        style={{marginTop: '12px'}}
+                      >Expiration</p>
+                      <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">01.01.2030 @ 09:00:00</div>
+                    </div>
+                  ) : (
+                    <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
+                      <div style={{
+                        width: '100%',
+                        height: '16px',
+                        borderRadius: 'inherit'
+                      }}
+                      className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"></div>
+                    </div>
+                  )}
                   <div></div>
                 </div>
               </div>

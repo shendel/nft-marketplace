@@ -8,7 +8,7 @@ import Header from "/components/market/Header"
 import Footer from "/components/market/Footer"
 
 import fetchNFTCollectionMeta from "/helpers/fetchNFTCollectionMeta"
-import fetchNftContent from '/helpers/fetchNftContent'
+import fetchManyNftContent from '/helpers/fetchManyNftContent'
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
 
 import { ipfsUrl } from "/helpers/ipfsUrl"
@@ -91,8 +91,6 @@ const MarketCollection: NextPage = (props) => {
         address: marketplaceContract, 
         chainId,
         collectionAddress,
-        offset: 0,
-        limit: 0
       }).then((_marketInfo) => {
         console.log('>>> MARKET INFO', _marketInfo)
         setMarketInfo(_marketInfo)
@@ -124,26 +122,44 @@ const MarketCollection: NextPage = (props) => {
   // Fetch tokens URIs
   const [ tokensUrls, setTokensUrls ] = useState({})
   
-  const doFetchTokenUrls = (tokenIds) => {
-    if (marketInfo && marketInfoFetched && marketInfo.marketNft) {
-      fetchNftContent({
-        address: marketInfo.marketNft,
-        chainId,
-        ids: tokenIds
-      }).then((urls) => {
-        setTokensUrls({
-          ...tokensUrls,
-          ...urls
-        })
+  const doFetchTokenUrls = (tokensInfo) => {
+    const fetchArgs = {
+      chainId: marketInfo.chainId,
+      tokensInfo: tokensInfo.map((tokenInfo) => {
+        return {
+          address: tokenInfo.collection,
+          tokenId: tokenInfo.tokenId
+        }
       })
     }
+    fetchManyNftContent(
+      fetchArgs
+    ).then((answer) => {
+      setTokensUrls((newTokenUrls) => {
+        Object.keys(answer).forEach((address_id) => {
+          if (answer[address_id] !== false) {
+            const [ collection, tokenId ] = address_id.split(`_`)
+            newTokenUrls = {
+              ...newTokenUrls,
+              [collection]: {
+                ...newTokenUrls[collection],
+                [tokenId]: answer[address_id].tokenURI,
+              },
+            }
+          }
+        })
+        return newTokenUrls
+      })
+    }).catch((err) => {
+      console.log('>> err', err)
+    })
   }
   
   useEffect(() => {
     if (marketInfo && collectionInfo) {
-      doFetchTokenUrls(tokensAtSale.map((tokenInfo) => { return tokenInfo.tokenId }))
+      doFetchTokenUrls(tokensAtSale)
     }
-  }, [ marketInfo, collectionInfo ])
+  }, [ marketInfo, collectionInfo, tokensAtSale ])
   
   return (
     <>
@@ -215,8 +231,11 @@ const MarketCollection: NextPage = (props) => {
                 return (
                   <div key={index}>
                     <NftCard 
-                      collectionAddress={marketInfo.marketNft}
-                      mediaUrl={tokensUrls[tokenId.toString()] || false}
+                      mediaUrl={
+                        (tokensUrls[tokenInfo.collection] && tokensUrls[tokenInfo.collection][tokenId.toString()])
+                        ? tokensUrls[tokenInfo.collection][tokenId.toString()]
+                        : false
+                      }
                       tokenInfo={tokenInfo}
                       allowedERC20Info={allowedERC20Info}
                       chainId={chainId}

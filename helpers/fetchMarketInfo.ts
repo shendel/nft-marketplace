@@ -15,16 +15,15 @@ const fetchMarketInfo = (options) => {
   const {
     address,
     chainId,
-    offset,
-    limit,
     collectionAddress,
     onlyTokens,
+    onlyInfo,
     userAddress,
   } = {
-    offset: 0,
-    limit: 10,
     onlyTokens: false,
+    onlyInfo: false,
     userAddress: false,
+    collectionAddress: false,
     ...options
   }
   return new Promise((resolve, reject) => {
@@ -48,15 +47,24 @@ const fetchMarketInfo = (options) => {
               } : (onlyTokens)
                 ? {
                   tokensAtSaleCount:{ func: 'getTokensAtSaleCount' },
-                  tokensAtSale:     { func: 'getTokensAtSale', args: [offset, limit] },
+                  tokensAtSale:     { func: 'getTokensAtSale' },
                 } : {
                   isMPContract:     { func: 'isMarketPlaceContract' },
                   owner:            { func: 'owner' },
                   version:          { func: 'version' },
                   nftCollections:   { func: 'getAllowedCollections' },
                   tradeFee:         { func: 'getTradeFee' },
-                  tokensAtSaleCount:{ func: 'getTokensAtSaleCount' },
-                  tokensAtSale:     { func: 'getTokensAtSale' },
+                  ...((!onlyInfo && !collectionAddress)
+                    ? {
+                      tokensAtSaleCount:{ func: 'getTokensAtSaleCount' },
+                      tokensAtSale:     { func: 'getTokensAtSale' },
+                    } : {}
+                  ),
+                  ...((collectionAddress)
+                    ? {
+                      tokensAtSale: { func: 'getCollectionTokensAtSale', args: [ collectionAddress ] },
+                    } : {}
+                  ),
                   allowedERC20:     { func: 'getAllowedERC20' },
                   feeReceiver:      { func: 'getFeeReceiver' },
                 }

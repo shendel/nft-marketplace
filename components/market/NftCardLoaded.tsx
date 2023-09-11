@@ -101,30 +101,50 @@ export default function NftCard(props) {
     setIsLoadedMedia(true)
   }
   const goToBuy = () => {
-    const buyLink = getLink('asset', `${collectionAddress}/${tokenInfo.tokenId}`)
+    const buyLink = getLink('asset', `${tokenInfo.collection}/${tokenInfo.tokenId}`)
     router.push(buyLink.replace('_MYAPP/',''))
   }
+  
   return (
     <>
       <article className="relative group overflow-hidden">
         <div className="bg-main-background h-[40px] w-[100px] z-50 rotate-[-32.17deg] absolute -left-8 -top-3"></div>
         <div className="bg-main-background h-[40px] w-[100px] z-50 rotate-[-32.17deg] absolute -right-8 -bottom-3"></div>
-        <div className="w-[335px] h-[275px] overflow-hidden">
+        <div className="w-[335px] h-[275px] overflow-hidden"
+          style={{
+            position: `relative`,
+          }}
+        >
           <button onClick={goToBuy}>
             {isFetching ? (
-              <div>{`Fetching`}</div>
+              <div className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"
+                style={{
+                  width: '335px',
+                  height: '275px',
+                  borderRadius: 'inherit',
+                }}
+              ></div>
             ) : (
               <>
                 {isFetched && (
                   <>
                     {jsonData && jsonData.image && (
                       <>
+                        <div className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"
+                          style={{
+                            width: '335px',
+                            height: '275px',
+                            borderRadius: 'inherit',
+                            position: 'absolute',
+                          }}
+                        ></div>
                         <img
                           className="object-cover object-center group-hover:scale-110 transition-all duration-200"
                           style={{
                             objectFit: 'contain',
                             width: '100%',
                             height: '100%',
+                            position: 'relative',
                           }}
                           src={ipfsUrl(jsonData.image)}
                           onLoad={onLoaded}

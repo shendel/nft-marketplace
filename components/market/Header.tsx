@@ -1,5 +1,20 @@
 
 export default function Header(props) {
+  const links = [
+    {
+      title: 'Link 1',
+      href: 'https://ya.ru',
+      target: '_blank',
+    },
+    {
+      title: 'Buy',
+      href: './market'
+    },
+    {
+      title: 'Sell',
+      href: './sell'
+    }
+  ]
   return (
     <>
       <div className="py-4 pl-4 pr-3 relative z-50 md:bg-white md:bg-opacity-5 lg:py-5 lg:px-[30px]">
@@ -50,7 +65,8 @@ export default function Header(props) {
             <div className="flex gap-7 lg:gap-9 xl:gap-14 2xl:gap-16">
               <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/buy">Link 1</a>
               <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/buy">Link 2</a>
-              <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/buy">Buy</a>
+              <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" 
+                href="./market">Buy</a>
               <a className="hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150" href="https://market.moondao.com/sell">Sell</a>
             </div>
             <div className="ml-6 lg:ml-8 xl:ml-10 2xl:ml-12">

@@ -34,14 +34,18 @@ const fetchMarketTokenInfo = (options) => {
           target: marketAddress,
           encoder: abiI,
           calls: {
-            tokensAtSale:     { func: 'getTokensAtSale', args: [0, 0] },
+            tokensAtSale:     { func: 'getTokensAtSale' },
             allowedERC20:     { func: 'getAllowedERC20' },
           }
         }).then((mcAnswer) => {
           let tokenInfo = false
           if (mcAnswer?.tokensAtSale) {
             Object.keys(mcAnswer.tokensAtSale).forEach((key) => {
-              if (mcAnswer.tokensAtSale[key].tokenId.toString() === tokenId.toString()) {
+              if (
+                (mcAnswer.tokensAtSale[key].tokenId.toString() === tokenId.toString())
+                &&
+                (mcAnswer.tokensAtSale[key].collection.toString().toLowerCase() === collectionAddress.toString().toLowerCase())
+              ) {
                 tokenInfo = mcAnswer.tokensAtSale[key]
                 return false
               }

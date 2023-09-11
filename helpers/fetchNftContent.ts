@@ -24,7 +24,11 @@ const fetchNftContent = (options) => {
 
         const multicall = new web3.eth.Contract(MulticallAbi, MULTICALL_CONTRACTS[chainId])
         const abiI = new AbiInterface(NFT_ABI)
-        const mcCalls = {}
+        const mcCalls = {
+          baseExtension: {
+            func: `baseExtension`
+          }
+        }
         ids.forEach((tokenId) => {
           mcCalls[tokenId] = { func: 'tokenURI', args: [tokenId] }
         })
@@ -34,7 +38,18 @@ const fetchNftContent = (options) => {
           encoder: abiI,
           calls: mcCalls
         }).then((mcAnswer) => {
-          resolve(mcAnswer)
+          const _ret = {}
+          Object.keys(mcAnswer).forEach((tokenId) => {
+            if (tokenId !== `baseExtension`) {
+              if (mcAnswer.baseExtension) {
+                _ret[tokenId] = `${mcAnswer[tokenId]}${tokenId}${mcAnswer.baseExtension}`
+              } else {
+                _ret[tokenId] = mcAnswer[tokenId]
+              }
+            }
+          })
+          console.log('>>> fetchNftContent', _ret)
+          resolve(_ret)
         }).catch((err) => {
           console.log('>>> Fail fetch all info', err)
           reject(err)
