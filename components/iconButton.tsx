@@ -7,26 +7,38 @@ export default function iconButton(options) {
     title,
     icon,
     onClick,
-    target
+    target,
+    disabled
   } = {
     href: ``,
     title: ``,
+    disabled: false,
     icon: `up-right-from-square`,
     onClick: () => {},
     ...options,
   }
 
   const aAttrs = {
-    className: styles.iconButton,
+    className: `${styles.iconButton} ${(disabled) ? 'disabled' : ''}`,
     alt: title,
     title,
   }
-  if (href) aAttrs.href = href
+  if (href && !disabled) aAttrs.href = href
   if (target) aAttrs.target = target
  
   return (
-    <a {...aAttrs} onClick={onClick}>
-      <FaIcon icon={icon} />
-    </a>
+    <>
+      <style jsx>
+        {`
+          .disabled {
+            background: #414141;
+            color: #888484;
+          }
+        `}
+      </style>
+      <a {...aAttrs} onClick={(disabled) ? () => {} : onClick}>
+        <FaIcon icon={icon} />
+      </a>
+    </>
   )
 }

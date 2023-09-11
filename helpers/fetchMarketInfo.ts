@@ -36,6 +36,7 @@ const fetchMarketInfo = (options) => {
 
         const multicall = new web3.eth.Contract(MulticallAbi, MULTICALL_CONTRACTS[chainId])
         const abiI = new AbiInterface(MarketContractAbi)
+
         callMulticall({
           multicall,
           target: address,
@@ -52,16 +53,20 @@ const fetchMarketInfo = (options) => {
                   isMPContract:     { func: 'isMarketPlaceContract' },
                   owner:            { func: 'owner' },
                   version:          { func: 'version' },
-                  marketNft:        { func: 'marketNft' },
+                  nftCollections:   { func: 'getAllowedCollections' },
                   tradeFee:         { func: 'getTradeFee' },
                   tokensAtSaleCount:{ func: 'getTokensAtSaleCount' },
-                  tokensAtSale:     { func: 'getTokensAtSale', args: [offset, limit] },
+                  tokensAtSale:     { func: 'getTokensAtSale' },
                   allowedERC20:     { func: 'getAllowedERC20' },
                   feeReceiver:      { func: 'getFeeReceiver' },
                 }
         }).then((mcAnswer) => {
           console.log('>> market mc info', mcAnswer)
-          resolve(mcAnswer)
+          resolve({
+            chainId,
+            address,
+            ...mcAnswer
+          })
         }).catch((err) => {
           console.log('>>> Fail fetch all info', err)
           reject(err)

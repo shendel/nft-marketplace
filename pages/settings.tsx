@@ -54,14 +54,10 @@ const storageChainId = 5
 const storageAddress = '0xafb8f27df1f629432a47214b4e1674cbcbdb02df'
 */
 const settingsTabs = {
-  nftconfig: `NFT collection`,
   marketplace: `Marketplace`,
-  mintconfig: `Mint settings`,
-  main: `Farm settings`,
   mainmenu: `Menu Items`,
   texts: `Edit texts`,
   design: `Design`,
-  //social: `Social links`
 }
 
 const debugLog = (msg) => { console.log(msg) }
@@ -345,7 +341,7 @@ const Settings: NextPage = (props) => {
     })
   }
 
-  const [activeTab, setActiveTab] = useState(`main`)
+  const [activeTab, setActiveTab] = useState(`marketplace`)
 
   /* -------------- MAIN TAB ---------------------*/
   const [ newChainId, setNewChainId ] = useState(storageData?.chainId || 0)

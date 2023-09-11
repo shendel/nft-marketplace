@@ -1501,6 +1501,7 @@ contract Marketplace is Ownable, Pausable {
         delete _marketCollections;
         for(uint256 i = 0; i < _newCollections.length; i++) {
             _marketCollections.push(IERC721(_newCollections[i]));
+            _allowedCollections[_newCollections[i]] = true;
         }
     }
 

@@ -4,13 +4,16 @@ import {
   useStateUint,
   useStateAddress
 } from "/helpers/useState"
-import isImageUrl from "/helpers/isImageUrl"
+
+import isEvmAddress from "/helpers/isEvmAddress"
 import SwitchNetworkAndCall from "../SwitchNetworkAndCall"
 import FaIcon from "../FaIcon"
 import adminFormRow from "/components/adminFormRow"
 import AdminInfoRow from "/components/AdminInfoRow"
 import List from "../List"
+import AddressList from "../AddressList"
 import ListView from "../ListView"
+import BlockScanLink from "../BlockScanLink"
 
 import {
   AVAILABLE_NETWORKS_INFO,
@@ -34,41 +37,6 @@ export default function TabMarketplace(options) {
     chainId,
     activeAccount,
   } = options
-
-  const [ isSaveChanges, setIsSaveChanges ] = useState(false)
-  
-  
-  const doSaveChanges = () => {
-    openConfirmWindow({
-      title: `Save changes`,
-      message: `Save Mint page changes to storage config?`,
-      onConfirm: () => {
-        /*
-        setIsSaveChanges(true)
-        saveStorageConfig({
-          newData: {
-            mintType: newMintType
-          },
-          onBegin: () => {
-            addNotify(`Confirm transaction for save main config`)
-          },
-          onReady: () => {
-            addNotify(`Main config successfull saved`, `success`)
-            setIsSaveChanges(false)
-          },
-          onError: (err) => {
-            addNotify(`Fail save main config`, `error`)
-            setIsSaveChanges(false)
-          }
-        })
-        */
-      }
-    })
-  }
-
-  useEffect(() => {
-  }, [])
-
   
 
   const [ marketplaceContract, setMarketplaceContract ] = useState(``)
@@ -76,6 +44,7 @@ export default function TabMarketplace(options) {
   const [ marketChainId, setMarketChainId ] = useState(chainId)
   const [ isDeployOpened, setIsDeployOpened ] = useState( false )
   const [ nftCollection, setNftCollection, nftCollectionError ] = useStateAddress('')
+  const [ nftCollections, setNftCollections ] = useState([])
   const [ tradeFee, setTradeFee ] = useStateUint(10)
   const [ feeReceiver, setFeeReceiver ] = useStateAddress(activeAccount) 
   const [ allowedERC20, setAllowedERC20 ] = useState([])
@@ -92,8 +61,12 @@ export default function TabMarketplace(options) {
 
   const doDeployMarketplace = () => {
     if (!marketChainId) return showAlert(`Fill settings first`, `Specify chain id`)
-    if (!nftCollection) return showAlert(`Fill settings first`, `Specify NFT collection`)
+    const hasNftCollectionsError = nftCollections.filter((address) => { return !isEvmAddress(address) })
+    if (hasNftCollectionsError.length) return showAlert(`Address not correct`, `You are specify not correct nft collection address`)
+    if (nftCollections.length == 0) return showAlert(`Fill settings first`, `Specify NFT collection address`)
     if (!feeReceiver) return showAlert(`Fill settings first`, `Specify fee receiver address`)
+    const hasERC20Error = allowedERC20.filter((address) => { return !isEvmAddress(address) })
+    if (hasERC20Error.length) return showAlert(`Address not correct`, `You are specify not correct ERC20 address`)
 
     const marketChainInfo = CHAIN_INFO(marketChainId)
 
@@ -107,7 +80,7 @@ export default function TabMarketplace(options) {
         } = getActiveChain()
         deployMarketplace({
           activeWeb3,
-          nftCollection,
+          nftCollections,
           tradeFee,
           feeReceiver,
           allowedERC20,
@@ -198,9 +171,10 @@ export default function TabMarketplace(options) {
   const [ needReloadContract, setNeedReloadContract ] = useState(false)
   /* Edit MarketPlace */
   const [ isEditFeeReciever, setIsEditFeeReciever ] = useState(false)
+  const [ newNftCollections, setNewNftCollections ] = useState(Web3ObjectToArray(deployedMPInfo?.nftCollections))
   const [ newFeeReciever, setNewFeeReciever ] = useStateAddress(deployedMPInfo?.feeReceiver)
   const [ newTradeFee, setNewTradeFee ] = useStateUint(deployedMPChainInfo?.tradeFee)
-  const [ newAllowedERC20, setNewAllowedERC20 ] = useState(Web3ObjectToArray(deployedMPInfo.allowedERC20))
+  const [ newAllowedERC20, setNewAllowedERC20 ] = useState(Web3ObjectToArray(deployedMPInfo?.allowedERC20))
 
   const [ isSaveMainSettings, setIsSaveMainSettings ] = useState(false)
   useEffect(() => {
@@ -209,8 +183,6 @@ export default function TabMarketplace(options) {
       fetchMarketInfo({
         address: deployedMPContract,
         chainId: deployedMPChainId,
-        offset: 0,
-        limit: 0,
       }).then((info) => {
         console.log('>> MP info', info)
         setDeployedMPInfo(info)
@@ -292,9 +264,8 @@ export default function TabMarketplace(options) {
     fetchMarketInfo({
       address: existsMPContract,
       chainId: existsMPChainId,
-      offset: 0,
-      limit: 0,
     }).then((info) => {
+      console.log('>>> info', info)
       if (info && info.isMPContract) {
         setIsExistsMPFetched(true)
         setExistMPInfo(info)
@@ -310,6 +281,7 @@ export default function TabMarketplace(options) {
   const doFetchExistsInfo = () => {
     if (!existsMPChainId) return showAlert(`Error`, `Specify Chain Id`)
     if (!existsMPContract) return showAlert(`Error`, `Specify contract address`)
+    if (!isEvmAddress(existsMPContract)) return showAlert(`Error`, `Specify correct contract address`)
     _doFetchExistsInfo()
   }
   const doExistsSave = () => {
@@ -395,11 +367,20 @@ export default function TabMarketplace(options) {
                 </div>
                 {isExistsMPFetched && existsMPInfo && (
                   <>
-                    <AdminInfoRow label={`Owner`} value={existsMPInfo.owner} />
-                    <AdminInfoRow label={`NFT Collection`} value={existsMPInfo.marketNft} />
+                    <AdminInfoRow label={`Owner`} value={(
+                      <BlockScanLink address={existsMPInfo.owner} chainId={existsMPInfo.chainId} />
+                    )} />
+                    <AdminInfoRow label={`NFT Collections`} value={(
+                      <ListView items={Web3ObjectToArray(existsMPInfo.nftCollections)} chainId={existsMPInfo.chainId} isAddressList={true} />
+                    )} />
                     <AdminInfoRow label={`Trade fee`} value={existsMPInfo.tradeFee} />
-                    <AdminInfoRow label={`Fee receiver`} value={existsMPInfo.feeReceiver} />
-                    <AdminInfoRow label={`Allowed ERC20`} value={(<ListView items={Web3ObjectToArray(existsMPInfo.allowedERC20)} />)} />
+                    <AdminInfoRow label={`Fee receiver`} value={(
+                        <BlockScanLink address={existsMPInfo.feeReceiver} chainId={existsMPInfo.chainId} />
+                    )} />
+                    <AdminInfoRow label={`Allowed ERC20`} value={
+                        (<ListView items={Web3ObjectToArray(existsMPInfo.allowedERC20)} chainId={existsMPInfo.chainId} isAddressList={true} />)
+                      }
+                    />
                   </>
                 )}
                 <div className={styles.actionsRow}>
@@ -431,11 +412,40 @@ export default function TabMarketplace(options) {
               <div className={styles.subFormInfo}>
                 <h3>Deployed MarketPlace info</h3>
                 <AdminInfoRow label={`MarketPlace Chain Id`} value={(<>{deployedMPChainInfo.chainName} ({deployedMPChainId})</>)} />
-                <AdminInfoRow label={`MarketPlace address`} value={deployedMPContract} />
+                <AdminInfoRow label={`MarketPlace address`} value={(
+                  <BlockScanLink address={deployedMPContract} chainId={deployedMPChainId} />
+                )} />
                 {deployedMPInfo && (
                   <>
-                    <AdminInfoRow label={`Owner`} value={deployedMPInfo.owner} />
-                    <AdminInfoRow label={`NFT collection`} value={deployedMPInfo.marketNft} />
+                    <AdminInfoRow label={`Owner`} value={(
+                      <BlockScanLink address={deployedMPInfo.owner} chainId={deployedMPChainId} />
+                    )} />
+                    <AdminInfoRow {...{
+                      label: `NFT collections`,
+                      value: (
+                        <ListView items={Web3ObjectToArray(deployedMPInfo.nftCollections)} isAddressList={true} chainId={deployedMPChainId} />
+                      ),
+                      canEdit: true,
+                      injectedButtons: true,
+                      editView: (buttons) => {
+                        return (
+                          <AddressList items={newNftCollections} onChange={(v) => { setNewNftCollections(v) }} buttons={buttons} chainId={deployedMPChainId} />
+                        )
+                      },
+                      onEdit: () => { setNewNftCollections(Web3ObjectToArray(deployedMPInfo.nftCollections)) },
+                      onSave: () => {
+                        const hasError = newNftCollections.filter((address) => { return !isEvmAddress(address) })
+                        if (hasError.length) {
+                          showAlert(`Error`, `Specify correct NFT collection address`)
+                          return false
+                        }
+                        if (!newNftCollections.length) {
+                          showAlert(`Error`, `Specify NFT collection address`)
+                          return false
+                        }
+                        return saveMPSetting('setAllowedCollections', [newNftCollections])
+                      }
+                    }} />
                     <AdminInfoRow {...{
                       label: `Trade fee %`,
                       value: deployedMPInfo.tradeFee,
@@ -452,7 +462,9 @@ export default function TabMarketplace(options) {
                     }} />
                     <AdminInfoRow {...{
                       label: `Fee receiver`,
-                      value: deployedMPInfo.feeReceiver,
+                      value: (
+                        <BlockScanLink address={deployedMPInfo.feeReceiver} chainId={deployedMPChainId} />
+                      ),
                       canEdit: true,
                       editView: () => {
                         return (
@@ -461,25 +473,33 @@ export default function TabMarketplace(options) {
                       },
                       onEdit: () => { setNewFeeReciever(deployedMPInfo.feeReceiver) },
                       onSave: () => {
-                        if (newFeeReciever) {
+                        if (isEvmAddress(newFeeReciever)) {
                           return saveMPSetting(`setFeeReceiver`, [newFeeReciever])
+                        } else {
+                          showAlert(`Error`, `Specify correct fee receiver address`)
+                          return false
                         }
                       }
                     }} />
                     <AdminInfoRow {...{
                       label: `Allowed ERC20`,
                       value: (
-                        <ListView items={Web3ObjectToArray(deployedMPInfo.allowedERC20)} />
+                        <ListView items={Web3ObjectToArray(deployedMPInfo.allowedERC20)} isAddressList={true} chainId={deployedMPChainId} />
                       ),
                       canEdit: true,
                       injectedButtons: true,
                       editView: (buttons) => {
                         return (
-                          <List items={newAllowedERC20} onChange={(v) => { setNewAllowedERC20(v) }} buttons={buttons} />
+                          <AddressList items={newAllowedERC20} onChange={(v) => { setNewAllowedERC20(v) }} buttons={buttons} chainId={deployedMPChainId} />
                         )
                       },
                       onEdit: () => { setNewAllowedERC20(Web3ObjectToArray(deployedMPInfo.allowedERC20)) },
                       onSave: () => {
+                        const hasError = newAllowedERC20.filter((address) => { return !isEvmAddress(address) })
+                        if (hasError.length) {
+                          showAlert(`Error`, `Specify correct ERC20 address`)
+                          return false
+                        }
                         return saveMPSetting(`setAllowedERC20`, [newAllowedERC20])
                       }
                     }} />
@@ -501,10 +521,15 @@ export default function TabMarketplace(options) {
                   subForm: true
                 })}
                 <div className={styles.infoRow}>
-                  <label>NFT Collection:</label>
+                  <label>NFT Collections:</label>
                   <div>
                     <div>
-                      <input type="text" value={nftCollection} onChange={(e) => { setNftCollection(e) }} />
+                      <strong className={styles.inputInfo}>
+                        {`List of NFT contracts that can be allowed for trading`}
+                      </strong>
+                    </div>
+                    <div>
+                      <AddressList chainId={marketChainId} items={nftCollections} onChange={(v) => { setNftCollections(v) }} />
                     </div>
                   </div>
                 </div>
@@ -530,7 +555,7 @@ export default function TabMarketplace(options) {
                       <strong className={styles.inputInfo}>List of token contracts that can be used for trading on par with native currency</strong>
                     </div>
                     <div>
-                      <List items={allowedERC20} onChange={(v) => { setAllowedERC20(v) }} />
+                      <AddressList chainId={marketChainId} items={allowedERC20} onChange={(v) => { setAllowedERC20(v) }} />
                     </div>
                   </div>
                 </div>

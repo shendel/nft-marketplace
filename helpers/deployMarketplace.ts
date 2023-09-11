@@ -6,7 +6,7 @@ const deployMarketplace = (options) => {
   return new Promise((resolve, reject) => {
     const {
       activeWeb3,
-      nftCollection,
+      nftCollections,
       tradeFee,
       feeReceiver,
       allowedERC20,
@@ -32,13 +32,13 @@ const deployMarketplace = (options) => {
           gas: '0'
         }
 /*
-        address _nft,
+        address _nftCollections,
         address __feeReceiver,
         uint __tradeFee,
         address[] memory __allowedERC20
 */
         const _arguments = [
-          nftCollection,
+          nftCollections,
           feeReceiver,
           tradeFee,
           allowedERC20

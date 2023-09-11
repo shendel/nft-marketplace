@@ -1,11 +1,15 @@
 import styles from "../styles/Home.module.css"
+import BlockScanLink from "./BlockScanLink"
 
 export default function ListView(options) {
   const {
     labelEmpty,
     items,
+    isAddressList,
+    chainId
   } = {
-    
+    chainId: 0,
+    isAddressList: false,
     ...options
   }
 
@@ -39,7 +43,11 @@ export default function ListView(options) {
             {items.map((item, itemIndex) => {
               return (
                 <li key={itemIndex}>
-                  {items[itemIndex]}
+                  {isAddressList ? (
+                    <BlockScanLink address={items[itemIndex]} chainId={chainId} />
+                  ) : (
+                    <>{items[itemIndex]}</>
+                  )}
                 </li>
               )
             })}
