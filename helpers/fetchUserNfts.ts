@@ -12,7 +12,11 @@ const fetchUserNfts = (options) => {
       chainId,
       walletAddress,
       nftAddress,
-    } = options
+      onlyIds,
+    } = {
+      onlyIds: false,
+      ...options
+    }
 
     const chainInfo = CHAIN_INFO(chainId)
     if (chainInfo) {
@@ -43,23 +47,25 @@ const fetchUserNfts = (options) => {
         const abiI = new AbiInterface(ERC721Abi)
         const calls = []
         for (let checkTokenId = 0; checkTokenId<=(maxSupply || totalSupply); checkTokenId++) {
-          calls.push({
-            group: checkTokenId,
-            func: `ownerOf`,
-            args: [ checkTokenId ],
-            encoder: abiI,
-            target: nftAddress,
-          })
-          
-          calls.push({
-            group: checkTokenId,
-            func: `tokenURI`,
-            args: [ checkTokenId ],
-            encoder: abiI,
-            target: nftAddress,
-          })
-          
+          calls = [
+            ...calls,
+            {
+              group: checkTokenId,
+              func: `ownerOf`,
+              args: [ checkTokenId ],
+              encoder: abiI,
+              target: nftAddress,
+            },
+            ...((!onlyIds) ? [{
+              group: checkTokenId,
+              func: `tokenURI`,
+              args: [ checkTokenId ],
+              encoder: abiI,
+              target: nftAddress,
+            }] : []),
+          ]
         }
+
         callMulticallGroup({
           multicall,
           calls,

@@ -84,7 +84,6 @@ export const callMulticallGroup = (options) => {
       }
     })
     multicall.methods.tryAggregate(false, mcCalls).call().then((answers) => {
-    console.log(answers)
       answers.forEach((retData, index) => {
         if (retData.success) {
           let val = calls[index].encoder.decodeFunctionResult(

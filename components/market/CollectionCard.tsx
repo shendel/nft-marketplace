@@ -6,10 +6,12 @@ export default function CollectionCard(options) {
     address,
     collectionInfo,
     collectionMeta,
+    isSell,
   } = {
     isLoading: false,
     collectionInfo: false,
     collectionMeta: false,
+    isSell: false,
     ...options
   }
   if (isLoading) {
@@ -35,7 +37,7 @@ export default function CollectionCard(options) {
       <article className="relative flex flex-col group items-center hover:scale-[1.035] group transition-all duration-150">
         <a
           className="flex flex-col group items-center"
-          href={getLink('collection', `${address}`)}
+          href={getLink('collection', `${address}${(isSell) ? '/sell' : ''}`)}
         >
           {info && info.image ? (
             <div

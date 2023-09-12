@@ -19,6 +19,9 @@ import NftCard from "/components/market/NftCard"
 
 import fetchMarketInfo from '/helpers/fetchMarketInfo'
 
+import useWeb3 from "/helpers/useWeb3"
+import fetchUserNfts from "/helpers/fetchUserNfts"
+
 
 
 const MarketCollection: NextPage = (props) => {
@@ -29,24 +32,25 @@ const MarketCollection: NextPage = (props) => {
     },
     isOwner,
   } = props
+
   /* HASH ROUTING */
   const router = useRouter();
   const subRouter = (router.asPath.split('#')[1] || '').split('/');
   const [
     _collectionAddress,
-    _ownChainId,
+    _isSell,
   ] = (router.asPath.split('#')[1] || '').split('/');
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
-  const [ ownChainId, setOwnChainId ] = useState(_ownChainId)
+  const [ isSell, setIsSell ] = useState(_isSell == `sell`)
   
   useEffect(() => {
     const onHashChangeStart = (url) => {
       const [
         _collectionAddress,
-        _ownChainId,
+        _isSell
       ] = (url.split('#')[1] || '').split('/');
       setCollectionAddress(_collectionAddress)
-      setOwnChainId(_ownChainId)
+      setIsSell(_isSell == `sell`)
     }
     router.events.on("hashChangeStart", onHashChangeStart)
     return () => { router.events.off("hashChangeStart", onHashChangeStart) }
@@ -58,16 +62,25 @@ const MarketCollection: NextPage = (props) => {
   const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
   const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
   
+  const {
+    isWalletConnecting,
+    isConnected,
+    address: connectedAddress,
+    activeChainId,
+    activeWeb3,
+    connectWeb3,
+    switchChainId
+  } = useWeb3(chainId)
   
-  
+
   
   // Fetch collection base info
   const [ collectionInfo, setCollectionInfo ] = useState(false)
   useEffect(() => {
-    if (collectionAddress && (ownChainId || chainId)) {
+    if (collectionAddress && chainId) {
       setCollectionInfo(false)
       fetchNFTCollectionMeta({
-        chainId: ownChainId || chainId,
+        chainId: chainId,
         address: collectionAddress,
       }).then((_collectionInfo) => {
         setCollectionInfo(_collectionInfo)
@@ -76,7 +89,7 @@ const MarketCollection: NextPage = (props) => {
         console.log('>>> fail fetch collection info', err)
       })
     }
-  }, [ collectionAddress, chainId, ownChainId ] )
+  }, [ collectionAddress, chainId ] )
   
   // Fetch market info
   const [ marketInfo, setMarketInfo ] = useState(false)
@@ -95,7 +108,12 @@ const MarketCollection: NextPage = (props) => {
         console.log('>>> MARKET INFO', _marketInfo)
         setMarketInfo(_marketInfo)
 
-        setTokensAtSale(Web3ObjectToArray(_marketInfo.tokensAtSale))
+        setTokensAtSale(
+          Web3ObjectToArray(_marketInfo.tokensAtSale)
+            .sort((a,b) => {
+              return Number(a.utx) > Number(b.utx) ? -1 : 1
+            })
+        )
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)
 
@@ -161,6 +179,48 @@ const MarketCollection: NextPage = (props) => {
     }
   }, [ marketInfo, collectionInfo, tokensAtSale ])
   
+  const [ userTokens, setUserTokens ] = useState([])
+  const [ userTokensFetched, setUserTokensFetched ] = useState(false)
+  
+  
+  useEffect(() => {
+    if (chainId && collectionAddress && connectedAddress && collectionInfo) {
+      setUserTokensFetched(false)
+      fetchUserNfts({
+        chainId,
+        walletAddress: connectedAddress,
+        nftAddress: collectionAddress,
+      }).then((answer) => {
+        setUserTokens(answer)
+        setUserTokensFetched(true)
+        
+        setTokensUrls((newTokenUrls) => {
+          Object.keys(answer).forEach((key) => {
+            if (answer[key] !== false) {
+              let { tokenURI, tokenId } = answer[key]
+              if (collectionInfo.baseExtension) {
+                if (tokenURI.substr(-collectionInfo.baseExtension.length) !== collectionInfo.baseExtension) {
+                  tokenURI = `${tokenURI}${tokenId}${collectionInfo.baseExtension}`
+                } 
+              }
+              newTokenUrls = {
+                ...newTokenUrls,
+                [collectionAddress]: {
+                  ...newTokenUrls[collectionAddress],
+                  [tokenId]: tokenURI,
+                },
+              }
+            }
+          })
+          return newTokenUrls
+        })
+        
+      }).catch((err) => {
+        console.log('Fail fetch user tokens', err)
+      })
+    }
+  }, [ chainId, collectionAddress, collectionInfo, connectedAddress ])
+  
   return (
     <>
       <Header />
@@ -221,7 +281,7 @@ const MarketCollection: NextPage = (props) => {
           </div>
         )}
         <div className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
-          {!tokensAtSaleFetching && (
+          {!tokensAtSaleFetching && !isSell && (
             <>
               {tokensAtSale.map((tokenInfo, index) => {
                 const {
@@ -239,6 +299,28 @@ const MarketCollection: NextPage = (props) => {
                       tokenInfo={tokenInfo}
                       allowedERC20Info={allowedERC20Info}
                       chainId={chainId}
+                      isDeList={connectedAddress && connectedAddress.toLowerCase() == tokenInfo.seller.toLowerCase()}
+                    />
+                  </div>
+                )
+              })}
+            </>
+          )}
+          {userTokensFetched && isSell && (
+            <>
+              {userTokens.map(( { tokenId } = tokenInfo, index) => {
+                return (
+                  <div key={index}>
+                    <NftCard 
+                      mediaUrl={
+                        (tokensUrls[collectionAddress] && tokensUrls[collectionAddress][tokenId.toString()])
+                        ? tokensUrls[collectionAddress][tokenId.toString()]
+                        : false
+                      }
+                      collection={collectionAddress}
+                      tokenId={tokenId}
+                      chainId={chainId}
+                      isSell={isSell}
                     />
                   </div>
                 )

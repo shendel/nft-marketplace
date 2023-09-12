@@ -69,7 +69,7 @@ const Market: NextPage = (props) => {
   const {
     isWalletConnecting,
     isConnected,
-    address,
+    address: connectedAddress,
     activeChainId,
     activeWeb3,
     connectWeb3,
@@ -146,6 +146,11 @@ const Market: NextPage = (props) => {
     }
   }
 
+  const doSetTokensAtSale = (tokens) => {
+    setTokensAtSale(Web3ObjectToArray(tokens).sort((a,b) => {
+      return Number(a.utx) > Number(b.utx) ? -1 : 1
+    }))
+  }
   const [ needRefreshTokens, setNeedRefreshTokens ] = useState(false)
   useEffect(() => {
     if (needRefreshTokens) {
@@ -155,7 +160,7 @@ const Market: NextPage = (props) => {
         chainId,
         onlyTokens: true,
       }).then((info) => {
-        setTokensAtSale(Web3ObjectToArray(info.tokensAtSale))
+        doSetTokensAtSale(Web3ObjectToArray(info.tokensAtSale))
       })
     }
   }, [ needRefreshTokens ])
@@ -175,12 +180,9 @@ const Market: NextPage = (props) => {
         setMarketInfo(_marketInfo)
         
         setTokensAtSaleCount(_marketInfo.tokensAtSaleCount)
-        setTokensAtSale(Web3ObjectToArray(_marketInfo.tokensAtSale))
+        doSetTokensAtSale(Web3ObjectToArray(_marketInfo.tokensAtSale))
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)
-        if (address) {
-          doFetchOtherUserNfts()
-        }
       }).catch((err) => {
         console.log('>>> fail fetch market info', err)
       })
@@ -364,6 +366,7 @@ const Market: NextPage = (props) => {
                           tokenInfo={tokenInfo}
                           allowedERC20Info={allowedERC20Info}
                           chainId={chainId}
+                          isDeList={connectedAddress && connectedAddress.toLowerCase() == tokenInfo.seller.toLowerCase()}
                         />
                       )
                     })}

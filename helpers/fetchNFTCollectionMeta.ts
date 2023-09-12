@@ -34,6 +34,7 @@ const fetchNFTCollectionMeta = (options) => {
         } catch (e) {}
       }
       const collectionMeta = {
+        ...collectionInfo,
         name: collectionMetaJson?.name || collectionZeroJson?.name || collectionInfo.symbol || `-`,
         description: collectionMetaJson?.description || collectionZeroJson?.description || collectionInfo.name || `-`,
         image: collectionMetaJson?.image || collectionZeroJson?.image || collectionOneJson?.image || false,

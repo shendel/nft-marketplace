@@ -15,13 +15,31 @@ export default function NftCard(props) {
     collectionAddress,
     tokenInfo,
     chainId,
-  } = props
-  
+    isSell,
+    isDeList,
+    tokenId: _tokenId,
+    collection: _collection,
+  } = {
+    tokenId: false,
+    collection: false,
+    allowedERC20Info: false,
+    tokenInfo: false,
+    isSell: false,
+    isDeList: false,
+    ...props,
+  }
   const chainInfo = CHAIN_INFO(chainId)
   const {
+    tokenId,
+    collection,
     price,
     erc20,
-  } = tokenInfo
+  } = tokenInfo || {
+    tokenId: _tokenId,
+    collection: _collection,
+    price: false,
+    erc20: false
+  }
 
   const viewPrice = (
     <>
@@ -51,9 +69,7 @@ export default function NftCard(props) {
   const [ jsonData, setJsonData ] = useState({})
   
   useState(() => {
-    console.log('>>> useState', mediaUrl) 
     if (mediaUrl) {
-      console.log('>>> fetch media', mediaUrl)
       fetch(ipfsUrl(mediaUrl))
         .then((res) => {
           const contentType = res.headers.get('content-type')
@@ -78,7 +94,6 @@ export default function NftCard(props) {
         .then((json) => {
           
           if (json !== `FAIL_PARSE` && json !== `IMAGE`) {
-            console.log('>>> json', json)
             setJsonData(json)
           } else {
             if (json === `IMAGE`) {
@@ -101,7 +116,7 @@ export default function NftCard(props) {
     setIsLoadedMedia(true)
   }
   const goToBuy = () => {
-    const buyLink = getLink('asset', `${tokenInfo.collection}/${tokenInfo.tokenId}`)
+    const buyLink = getLink('asset', `${collection}/${tokenId}${(isSell) ? '/sell' : ''}`)
     router.push(buyLink.replace('_MYAPP/',''))
   }
   
@@ -194,13 +209,20 @@ export default function NftCard(props) {
                 </defs>
               </svg>
               */}
-              {viewPrice}
+              {!isSell && (<>{viewPrice}</>)}
             </p>
           </div>
           <div className="mt-5 pr-9 flex flex-col items-end">
-            <p className="font-bold text-xl">#{tokenInfo.tokenId}</p>
+            <p className="font-bold text-xl">#{tokenId}</p>
             <button onClick={goToBuy} className="absolute top-12 mt-10 border-[0.5px] hover:scale-105 px-[10px] py-[4px] transition-all duration-150 hover:bg-slate-900 rounded-tl-[10px] rounded-br-[10px]">
-              <a>Buy now</a>
+              <a>
+                {isDeList
+                  ? `De-List`
+                  : (isSell)
+                    ? `Sell now`
+                    : `Buy now`
+                }
+              </a>
             </button>
           </div>
         </div>
