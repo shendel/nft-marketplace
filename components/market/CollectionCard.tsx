@@ -9,12 +9,14 @@ export default function CollectionCard(options) {
     listedCount,
     userListedCount,
     isSell,
+    isMy,
   } = {
     listedCount: 0,
     userListedCount: 0,
     isLoading: false,
     collectionInfo: false,
     collectionMeta: false,
+    isMy: false,
     isSell: false,
     ...options
   }
@@ -41,7 +43,7 @@ export default function CollectionCard(options) {
       <article className="relative flex flex-col group items-center hover:scale-[1.035] group transition-all duration-150">
         <a
           className="flex flex-col group items-center"
-          href={getLink('collection', `${address}${(isSell) ? '/sell' : ''}`)}
+          href={getLink('collection', `${address}${(isSell) ? '/sell' : ((isMy) ? '/my_listed' : '')}`)}
         >
           {info && info.image ? (
             <div
@@ -101,7 +103,7 @@ export default function CollectionCard(options) {
               )}
             </h6>
             <p className="mt-[7px] text-sm flex items-center">
-              {!isSell && (
+              {!isSell && !isMy && (
                 <>
                   <span className="opacity-60">Listed</span>
                   <span className="ml-[14px] flex items-center gap-[6px]">
@@ -109,7 +111,7 @@ export default function CollectionCard(options) {
                   </span>
                 </>
               )}
-              {isSell && (
+              {(isSell || isMy) && (
                 <>
                   <span className="opacity-60">Your listed</span>
                   <span className="ml-[14px] flex items-center gap-[6px]">

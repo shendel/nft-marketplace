@@ -38,19 +38,21 @@ const MarketCollection: NextPage = (props) => {
   const subRouter = (router.asPath.split('#')[1] || '').split('/');
   const [
     _collectionAddress,
-    _isSell,
+    _action,
   ] = (router.asPath.split('#')[1] || '').split('/');
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
-  const [ isSell, setIsSell ] = useState(_isSell == `sell`)
+  const [ isSell, setIsSell ] = useState(_action == `sell`)
+  const [ isMy, setIsMy ] = useState(_action == `my_listed`)
   
   useEffect(() => {
     const onHashChangeStart = (url) => {
       const [
         _collectionAddress,
-        _isSell
+        _action
       ] = (url.split('#')[1] || '').split('/');
       setCollectionAddress(_collectionAddress)
-      setIsSell(_isSell == `sell`)
+      setIsSell(_action == `sell`)
+      setIsMy(_action == `my_listed`)
     }
     router.events.on("hashChangeStart", onHashChangeStart)
     return () => { router.events.off("hashChangeStart", onHashChangeStart) }
@@ -98,9 +100,9 @@ const MarketCollection: NextPage = (props) => {
   const [ tokensAtSale, setTokensAtSale ] = useState([])
   const [ tokensAtSaleFetching, setTokensAtSaleFetching ] = useState(true)
   
-  
   useEffect(() => {
     if (chainId && marketplaceContract) {
+      setTokensAtSaleFetching(true)
       fetchMarketInfo({
         address: marketplaceContract, 
         chainId,
@@ -123,7 +125,10 @@ const MarketCollection: NextPage = (props) => {
         console.log('>>> fail fetch market info', err)
       })
     }
-  }, [ chainId, marketplaceContract, collectionAddress, connectedAddress ])
+  }, [ chainId, marketplaceContract, collectionAddress, connectedAddress, isMy ])
+  
+
+
   // Fetch info about allowed erc20
   const [ allowedERC20Info, setAllowedERC20Info ] = useState(false)
   
@@ -223,6 +228,17 @@ const MarketCollection: NextPage = (props) => {
     }
   }, [ chainId, collectionAddress, collectionInfo, connectedAddress ])
   
+  const renderSubHeader = (title) => {
+    return (
+      <h2 className="font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100"
+        style={{
+          marginTop: '2em',
+        }}
+      >
+        {title}
+      </h2>
+    )
+  }
   return (
     <>
       <Header />
@@ -298,8 +314,48 @@ const MarketCollection: NextPage = (props) => {
             </div>
           </div>
         )}
+        {isMy && connectedAddress && (
+          <>{renderSubHeader(`Your listed NFTs from this collection`)}</>
+        )}
+        {(!tokensAtSaleFetching && !isMy && (!isSell || !connectedAddress)) && (
+          <>{renderSubHeader(`NFTs listed at Marketplace`)}</>
+        )}
+        {userTokensFetched && isSell && connectedAddress && (
+          <>{renderSubHeader(`Your not listed NFTs from this collection`)}</>
+        )}
         <div className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
-          {(!tokensAtSaleFetching && (!isSell || !connectedAddress)) && (
+          {isMy && connectedAddress && (
+            <>
+              {!tokensAtSaleFetching && (
+                <>
+                {tokensAtSale.filter((tokenInfo) => {
+                  return tokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase()
+                }).map((tokenInfo, index) => {
+                  const {
+                    tokenId,
+                  } = tokenInfo
+
+                  return (
+                    <div key={index}>
+                      <NftCard 
+                        mediaUrl={
+                          (tokensUrls[tokenInfo.collection] && tokensUrls[tokenInfo.collection][tokenId.toString()])
+                          ? tokensUrls[tokenInfo.collection][tokenId.toString()]
+                          : false
+                        }
+                        tokenInfo={tokenInfo}
+                        allowedERC20Info={allowedERC20Info}
+                        chainId={chainId}
+                        isDeList={connectedAddress && connectedAddress.toLowerCase() == tokenInfo.seller.toLowerCase()}
+                      />
+                    </div>
+                  )
+                })}
+                </>
+              )}
+            </>
+          )}
+          {(!tokensAtSaleFetching && !isMy && (!isSell || !connectedAddress)) && (
             <>
               {tokensAtSale.map((tokenInfo, index) => {
                 const {

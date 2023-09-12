@@ -2,6 +2,7 @@ import useWeb3 from "/helpers/useWeb3"
 import { useEffect, useState } from "react"
 import FaIcon from "/components/FaIcon"
 import { getLink } from "/helpers/getLink"
+import { getAssets } from "/helpers/getAssets"
 import WalletModal from "./WalletModal"
 
 export default function Header(props) {
@@ -221,6 +222,21 @@ export default function Header(props) {
                 </button>
               )}
             </div>
+            {address && (
+              <div className="ml-4 lg:ml-6">
+                <a href={getLink('profile')}>
+                  <img className="hover:scale-105 transition-all duration-150" 
+                    alt="Profile" 
+                    src={getAssets(`images/user-icon.png`, 'userIcon')}
+                    style={{
+                      objectFit: 'contain',
+                      width: '40px',
+                      height: '40px',
+                    }}
+                  />
+                </a>
+              </div>
+            )}
           </div>
         </nav>
       </div>
