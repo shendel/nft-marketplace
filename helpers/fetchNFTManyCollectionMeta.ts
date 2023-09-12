@@ -18,8 +18,10 @@ const fetchNFTManyCollectionMeta = (options) => {
       const metaPromiseList = []
       Object.keys(collectionsInfo).forEach((nftAddress) => {
         metaPromiseList.push( new Promise(async (resolve) => {
+          
           let collectionMetaJson = false
           let collectionZeroJson = false
+          let collectionOneJson = false
           if (collectionsInfo[nftAddress].contractURI) {
             try {
               collectionMetaJson = await fetchNftMetadata(ipfsUrl(collectionsInfo[nftAddress].contractURI))
@@ -30,10 +32,15 @@ const fetchNFTManyCollectionMeta = (options) => {
               collectionZeroJson = await fetchNftMetadata(ipfsUrl(collectionsInfo[nftAddress].zeroTokenURI))
             } catch (e) {}
           }
+          if (!collectionMetaJson && !collectionZeroJson && collectionsInfo[nftAddress].baseExtension && collectionsInfo[nftAddress].hiddenMetadataUri) {
+            try {
+              collectionOneJson = await fetchNftMetadata(ipfsUrl(`${collectionsInfo[nftAddress].hiddenMetadataUri}${1}${collectionsInfo[nftAddress].baseExtension}`))
+            } catch (e) {}
+          }
           const collectionMeta = {
             name: collectionMetaJson?.name || collectionZeroJson?.name || collectionsInfo[nftAddress].symbol || `-`,
-            description: collectionMetaJson?.description || collectionZeroJson.description || collectionsInfo[nftAddress].name || `-`,
-            image: collectionMetaJson?.image || collectionZeroJson.image || false,
+            description: collectionMetaJson?.description || collectionZeroJson?.description || collectionsInfo[nftAddress].name || `-`,
+            image: collectionMetaJson?.image || collectionZeroJson?.image || collectionOneJson?.image || false,
             totalSupply: collectionsInfo[nftAddress]?.totalSupply || 0,
           }
           

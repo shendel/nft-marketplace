@@ -32,6 +32,8 @@ const fetchNFTManyCollectionInfo = (options) => {
           maxSupply:        { func: 'MAX_SUPPLY' },
           name:             { func: 'name' },
           contractURI :     { func: 'contractURI ' },
+          hiddenMetadataUri:{ func: 'hiddenMetadataUri' },
+          baseExtension:    { func: 'baseExtension' },
           zeroTokenURI:     { func: 'tokenURI', args: [0] },
           symbol:           { func: 'symbol' },
         }

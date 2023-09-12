@@ -15,6 +15,7 @@ const fetchNFTCollectionMeta = (options) => {
     }).then( async (collectionInfo) => {
       let collectionMetaJson = false
       let collectionZeroJson = false
+      let collectionOneJson = false
 
       if (collectionInfo.contractURI) {
         try {
@@ -27,11 +28,15 @@ const fetchNFTCollectionMeta = (options) => {
           collectionZeroJson = await fetchNftMetadata(ipfsUrl(collectionInfo.zeroTokenURI))
         } catch (e) {}
       }
-
+      if (!collectionMetaJson && !collectionZeroJson && collectionInfo.baseExtension && collectionInfo.hiddenMetadataUri) {
+        try {
+          collectionOneJson = await fetchNftMetadata(ipfsUrl(`${collectionInfo.hiddenMetadataUri}${1}${collectionInfo.baseExtension}`))
+        } catch (e) {}
+      }
       const collectionMeta = {
         name: collectionMetaJson?.name || collectionZeroJson?.name || collectionInfo.symbol || `-`,
-        description: collectionMetaJson?.description || collectionZeroJson.description || collectionInfo.name || `-`,
-        image: collectionMetaJson?.image || collectionZeroJson.image || false,
+        description: collectionMetaJson?.description || collectionZeroJson?.description || collectionInfo.name || `-`,
+        image: collectionMetaJson?.image || collectionZeroJson?.image || collectionOneJson?.image || false,
         totalSupply: collectionInfo?.totalSupply || 0,
       }
       resolve(collectionMeta)

@@ -64,7 +64,7 @@ export default function Header(props) {
               flex-shrink: 0;
               box-shadow: none;
               background: hsl(256, 6.0%, 93.2%);
-              color: hsl(246, 6.0%, 9.0%);
+              color: #FFFFFF;
               cursor: pointer;
               -webkit-animation: animation-plwpox 300ms ease;
               animation: animation-plwpox 300ms ease;
