@@ -34,7 +34,6 @@ export default function BuyButton(options) {
     switchChainId
   } = useWeb3(chainId)
 
-console.log('>>> marketTokenInfo', marketTokenInfo)
   const addNotify = (msg, style) => {
     console.log('>>> NOTIFY', style, msg)
   }
@@ -74,6 +73,7 @@ console.log('>>> marketTokenInfo', marketTokenInfo)
       onFinally: (answer) => {
         addNotify(`NFT success buyed`, `success`)
         setIsBuyLot(false)
+        onBuy()
       }
     })
   }

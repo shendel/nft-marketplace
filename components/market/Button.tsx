@@ -4,13 +4,22 @@ export default function Button(options) {
   const {
     children,
     isLoading,
+    href,
     onClick,
+    disabled,
+    width,
   } = {
+    href: false,
     isLoading: false,
+    disabled: false,
+    width: false,
     onClick: () => {},
     ...options
   }
 
+  const props = {}
+  if (href) props.href = href
+  
   return (
     <>
       <style jsx>
@@ -21,6 +30,7 @@ export default function Button(options) {
             width: 1em;
             height: 1em;
             margin: 0 auto;
+            margin-top: 4px;
           }
 
           @-webkit-keyframes animation-103nb1t {
@@ -81,15 +91,33 @@ export default function Button(options) {
           }
           .-button {
             height: 52px;
+            cursor: pointer;
+            text-align: center;
+          }
+          .-button.-disabled {
+            cursor: not-allowed;
+          }
+          .-button.-locked {
+            cursor: not-allowed;
+            background: #4d4d4d !important
           }
         `}
       </style>
-      <button 
-        className="-button connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3" 
+      <a
+        {...props}
+        className={`-button ${(isLoading) ? '-disabled' : ''} ${(disabled) ? '-locked' : ''} connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3`}
         type="button" 
-        disabled={isLoading}
-        style={{minWidth: '140px'}}
-        onClick={(isLoading) ? () => {} : onClick}
+        style={{
+          minWidth: '140px',
+          ...(width
+            ? {
+              width: width,
+              marginLeft: '10px',
+              marginRight: '10px'
+            } : {}
+          ),
+        }}
+        onClick={(isLoading || disabled) ? () => {} : onClick}
       >
         {isLoading ? (
           <svg viewBox="0 0 50 50" 
@@ -104,7 +132,7 @@ export default function Button(options) {
         ) : (
           <>{children}</>
         )}
-      </button>
+      </a>
     </>
   )
 }

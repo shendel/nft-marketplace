@@ -18,12 +18,17 @@ import fetchNftContent from "/helpers/fetchNftContent"
 import fetchNFTCollectionMeta from "/helpers/fetchNFTCollectionMeta"
 import fetchMarketTokenInfo from "/helpers/fetchMarketTokenInfo"
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
-
-import SellerInfo from "/components/market/SellerInfo"
+import fetchNFTTokenOwner from "/helpers/fetchNFTTokenOwner"
+import AddressBlock from "/components/market/AddressBlock"
 
 import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 
 import BuyButton from "/components/market/BuyButton"
+import useWeb3 from "/helpers/useWeb3"
+
+import Button from "/components/market/Button"
+import SellNftForm from "/components/market/SellNftForm"
+import DeListingButton from "/components/market/DeListingButton"
 
 
 const MarketAsset: NextPage = (props) => {
@@ -35,55 +40,69 @@ const MarketAsset: NextPage = (props) => {
     isOwner,
   } = props
   
+  
+  
   const router = useRouter();
   const subRouter = (router.asPath.split('#')[1] || '').split('/');
   const [
     _collectionAddress,
     _tokenId,
-    _ownChainId
+    _isSellOpened,
   ] = (router.asPath.split('#')[1] || '').split('/');
 
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
   const [ tokenId, setTokenId ] = useState(_tokenId)
-  const [ ownChainId, setOwnChainId ] = useState(_ownChainId)
+  const [ isSellOpened, setIsSellOpened ] = useState((_isSellOpened == `sell`))
+  
   // HAsH ROUTER
   useEffect(() => {
     const onHashChangeStart = (url) => {
       const [
         _collectionAddress,
         _tokenId,
-        _ownChainId,
+        _isSellOpened,
       ] = (url.split('#')[1] || '').split('/');
+      console.log('>>> HASH', _isSellOpened)
       setCollectionAddress(_collectionAddress)
       setTokenId(_tokenId)
       setMarketTokenInfo(false)
       setSellCurrency(false)
       setIsSellCurrencyFetched(false)
-      setOwnChainId(_ownChainId)
+      setIsSellOpened(_isSellOpened == `sell`)
     }
     router.events.on("hashChangeStart", onHashChangeStart)
     return () => { router.events.off("hashChangeStart", onHashChangeStart) }
   }, [router.events])
   const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
   const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
+  const { address: connectedAddress } = useWeb3(chainId)
   // ---- END HASH ROUTER -----
 
   // Fetch token info from market
   const [ marketTokenInfo, setMarketTokenInfo ] = useState(false)
-
+  const [ tokenNotListening, setTokenNotListening ] = useState(false)
+  
+  const _doFetchMarketTokenInfo = () => {
+    fetchMarketTokenInfo({
+      marketAddress: marketplaceContract,
+      chainId,
+      collectionAddress,
+      tokenId,
+    }).then((answ) => {
+      console.log('>>> market token info', answ)
+      if (answ?.tokenInfo) {
+        setMarketTokenInfo(answ.tokenInfo)
+        setTokenNotListening(false)
+      } else {
+        setTokenNotListening(true)
+      }
+    }).catch((err) => {
+      console.log('>>> Fail fetch market token info', err)
+    })
+  }
   useEffect(() => {
     if (chainId && tokenId && collectionAddress && marketplaceContract) {
-      fetchMarketTokenInfo({
-        marketAddress: marketplaceContract,
-        chainId,
-        collectionAddress,
-        tokenId,
-      }).then((answ) => {
-        console.log('>>> market token info', answ)
-        if (answ?.tokenInfo) setMarketTokenInfo(answ.tokenInfo)
-      }).catch((err) => {
-        console.log('>>> Fail fetch market token info', err)
-      })
+      _doFetchMarketTokenInfo()
     }
   }, [ collectionAddress, chainId, tokenId, marketplaceContract ])
   
@@ -92,7 +111,6 @@ const MarketAsset: NextPage = (props) => {
 
   useEffect(() => {
     if (marketTokenInfo && chainId) {
-      console.log('>> ok')
       if (marketTokenInfo.erc20 === ZERO_ADDRESS) {
         const chainInfo = CHAIN_INFO(chainId)
         setSellCurrency(chainInfo.nativeCurrency)
@@ -121,11 +139,10 @@ const MarketAsset: NextPage = (props) => {
   // Fetch collection base info
   const [ collectionInfo, setCollectionInfo ] = useState(false)
   useEffect(() => {
-    if (collectionAddress && (chainId || ownChainId)) {
-      console.log('>>> RELOAD COLLECTION')
+    if (collectionAddress && (chainId)) {
       setCollectionInfo(false)
       fetchNFTCollectionMeta({
-        chainId: ownChainId || chainId,
+        chainId: chainId,
         address: collectionAddress,
       }).then((_collectionInfo) => {
         setCollectionInfo(_collectionInfo)
@@ -133,19 +150,54 @@ const MarketAsset: NextPage = (props) => {
         console.log('>>> fail fetch collection info', err)
       })
     }
-  }, [ collectionAddress, chainId, ownChainId] )
+  }, [ collectionAddress, chainId ] )
   
+  
+  const [ isTokenOwnerFetched, setIsTokenOwnerFetched ] = useState(false)
+  const [ tokenOwner, setTokenOwner ] = useState(false)
+
+  const _doFetchTokenOwner = () => {
+    setIsTokenOwnerFetched(false)
+    fetchNFTTokenOwner({
+      chainId,
+      collection: collectionAddress,
+      tokenId,
+    }).then((owner) => {
+      setTokenOwner(owner)
+      setIsTokenOwnerFetched(true)
+    }).catch((err) => {
+      console.log('>>> Fail fetch token owner', err)
+    })
+  }
+  useEffect(() => {
+    _doFetchTokenOwner()
+  }, [ tokenId, collectionAddress, chainId ])
+  
+  const [ isMyToken, setIsMyToken ] = useState(false)
+  useEffect(() => {
+    if (connectedAddress && tokenOwner) {
+      console.log('>>> IS MY TOKEN', connectedAddress && tokenOwner && connectedAddress.toLowerCase() == tokenOwner.toLowerCase())
+      console.log(connectedAddress, tokenOwner)
+      setIsMyToken(connectedAddress.toLowerCase() == tokenOwner.toLowerCase())
+    } else {
+      setIsMyToken(false)
+    }
+  }, [ connectedAddress, tokenOwner ])
+  
+  const doTokenInfoReload = () => {
+    _doFetchTokenOwner()
+    _doFetchMarketTokenInfo()
+  }
 
   // Fetch token metadata url
   const [ nftMetadataUrl, setNftMetadataUrl ] = useState(false)
   useEffect(() => {
-    if (collectionAddress && tokenId && (chainId || ownChainId)) {
-      console.log('>>> RELOAD COLLECTION META')
+    if (collectionAddress && tokenId && (chainId)) {
       setNftMetadataUrl(false)
       setNftMetadataJson(false)
       fetchNftContent({
         address: collectionAddress,
-        chainId: ownChainId || chainId,
+        chainId: chainId,
         ids: [tokenId],
       }).then((_nftMetadataUrl) => {
         if (_nftMetadataUrl && _nftMetadataUrl[tokenId]) {
@@ -168,6 +220,10 @@ const MarketAsset: NextPage = (props) => {
       })
     }
   }, [nftMetadataUrl])
+
+  const switchIsSellOpened = () => {
+    setIsSellOpened(!isSellOpened)
+  }
 
   return (
     <>
@@ -286,46 +342,111 @@ const MarketAsset: NextPage = (props) => {
                   {tokenId}
                 </p>
               </div>
-              <SellerInfo address={marketTokenInfo?.seller} />
-              <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
-                <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
-                  <p className="text-white opacity-60 mt-1 p-[2px]">Price</p>
-                  {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
-                    <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
-                      {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
-                      {` `}
-                      {sellCurrency.symbol}
-                      {/*
-                      <p
-                        className="text-white opacity-60 mt-1 p-[2px]" 
-                        style={{marginTop: '12px'}}
-                      >Expiration</p>
-                      <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">01.01.2030 @ 09:00:00</div>
-                      */}
-                    </div>
-                  ) : (
-                    <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
-                      <div style={{
-                        width: '100%',
-                        height: '16px',
-                        borderRadius: 'inherit'
-                      }}
-                      className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"></div>
+              {tokenNotListening && (
+                <>
+                  {!isMyToken && isTokenOwnerFetched && (
+                    <AddressBlock label={`NFT Owner`} address={tokenOwner} />
+                  )}
+                  {!isMyToken || !(isMyToken && isSellOpened) && (
+                    <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
+                      <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
+                        <p className="text-white opacity-60 mt-1 p-[2px]">
+                          NFT not listening at marketplace
+                        </p>
+                      </div>
                     </div>
                   )}
-                  <div></div>
-                </div>
-              </div>
-              {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price && (
-                <div className="flex justify-evenly items-center">
-                  <BuyButton 
-                    chainId={chainId}
-                    marketplaceContract={marketplaceContract}
-                    marketTokenInfo={marketTokenInfo}
-                    price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
-                    currency={sellCurrency.symbol}
-                  />
-                </div>
+                  {isMyToken && (
+                    <>
+                      {!isSellOpened && (
+                        <div className="flex justify-evenly items-center">
+                          <Button onClick={switchIsSellOpened} >{`Sell NFT token`}</Button>
+                        </div>
+                      )}
+                      {isSellOpened && (
+                        <SellNftForm
+                          marketplaceContract={marketplaceContract}
+                          chainId={chainId}
+                          tokenId={tokenId}
+                          collectionAddress={collectionAddress}
+                          onSell={() => {
+                            setIsSellOpened(false)
+                            doTokenInfoReload()
+                          }}
+                          onCancel={() => {
+                            setIsSellOpened(false)
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+              {!tokenNotListening && (
+                <>
+                  <AddressBlock label={`Seller`} address={marketTokenInfo?.seller} />
+                  <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
+                    <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
+                      <p className="text-white opacity-60 mt-1 p-[2px]">Price</p>
+                      {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
+                        <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
+                          {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                          {` `}
+                          {sellCurrency.symbol}
+                          {/*
+                          <p
+                            className="text-white opacity-60 mt-1 p-[2px]" 
+                            style={{marginTop: '12px'}}
+                          >Expiration</p>
+                          <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">01.01.2030 @ 09:00:00</div>
+                          */}
+                        </div>
+                      ) : (
+                        <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
+                          <div style={{
+                            width: '100%',
+                            height: '16px',
+                            borderRadius: 'inherit'
+                          }}
+                          className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"></div>
+                        </div>
+                      )}
+                      <div></div>
+                    </div>
+                  </div>
+                  {(
+                    marketTokenInfo
+                    && (marketTokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase())
+                  ) && (
+                    <div className="flex justify-evenly items-center">
+                      <DeListingButton
+                        chainId={chainId}
+                        marketplaceContract={marketplaceContract}
+                        collectionAddress={collectionAddress}
+                        tokenId={tokenId}
+                        onDelist={doTokenInfoReload}
+                      />
+                    </div>
+                  )}
+                  {(
+                    isSellCurrencyFetched
+                    && sellCurrency
+                    && marketTokenInfo
+                    && (marketTokenInfo.seller.toLowerCase() !== connectedAddress.toLowerCase())
+                    && marketTokenInfo.price
+                  ) && (
+                    <div className="flex justify-evenly items-center">
+                      <BuyButton 
+                        chainId={chainId}
+                        marketplaceContract={marketplaceContract}
+                        marketTokenInfo={marketTokenInfo}
+                        price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                        onBuy={doTokenInfoReload}
+                        currency={sellCurrency.symbol}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

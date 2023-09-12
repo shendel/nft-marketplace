@@ -1,6 +1,7 @@
-export default function SellerInfo(props) {
+export default function AddressBlock(props) {
   const {
     address,
+    label,
   } = props
   
   const sellerAddress = (address) ? `${address.substr(0,8)}...${address.substr(-4,4)}` : `...`
@@ -17,7 +18,7 @@ export default function SellerInfo(props) {
       ></div>
       <div className="m-0 p-0 ml-[6px] flex flex-col h-full mt-4">
         <div>
-          <p className="text-white opacity-60 mt-1 p-[2px]">Seller</p>
+          <p className="text-white opacity-60 mt-1 p-[2px]">{label}</p>
           <p className="font-semibold m-0 text-white text-opacity-90">
             {sellerAddress}
           </p>
