@@ -140,7 +140,8 @@ const SellPage: NextPage = (props) => {
     if (marketInfo && marketInfo.chainId) {
       fetchNFTManyCollectionInfo({
         addressList: Web3ObjectToArray(marketInfo.nftCollections),
-        chainId: marketInfo.chainId
+        chainId: marketInfo.chainId,
+        forAddress: connectedAddress
       }).then((answer) => {
         setCollectionsInfo({
           ...collectionsInfo,
@@ -150,7 +151,7 @@ const SellPage: NextPage = (props) => {
         console.log('>> err', err)
       })
     }
-  }, [ marketInfo ])
+  }, [ marketInfo, connectedAddress])
 
   return (
   <>
@@ -194,6 +195,7 @@ const SellPage: NextPage = (props) => {
                           collectionMeta={collectionsMeta[nftAddress] || false}
                           userListedCount={marketInfo.userCollectionListed ? marketInfo.userCollectionListed[nftAddress] : 0}
                           isSell={true}
+                          notListedCount={collectionsInfo[nftAddress]?.balance || false}
                         />
                       )
                     })}

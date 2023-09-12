@@ -13,8 +13,12 @@ import { callMulticallGroup } from './callMulticall'
 const fetchNFTManyCollectionInfo = (options) => {
   const {
     addressList,
-    chainId
-  } = options
+    chainId,
+    forAddress,
+  } = {
+    forAddress: false,
+    ...options
+  }
 
   return new Promise((resolve, reject) => {
   
@@ -36,6 +40,11 @@ const fetchNFTManyCollectionInfo = (options) => {
           baseExtension:    { func: 'baseExtension' },
           zeroTokenURI:     { func: 'tokenURI', args: [0] },
           symbol:           { func: 'symbol' },
+          ...((forAddress)
+              ? {
+                balance: { func: 'balanceOf', args: [ forAddress ] }
+              } : {}
+            ),
         }
         let calls = []
         addressList.forEach((collectionAddress) => {

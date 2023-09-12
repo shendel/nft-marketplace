@@ -8,11 +8,13 @@ export default function CollectionCard(options) {
     collectionMeta,
     listedCount,
     userListedCount,
+    notListedCount,
     isSell,
     isMy,
   } = {
     listedCount: 0,
     userListedCount: 0,
+    notListedCount: false,
     isLoading: false,
     collectionInfo: false,
     collectionMeta: false,
@@ -95,13 +97,26 @@ export default function CollectionCard(options) {
             </div>
           )}
           <div className="-mt-3 border  bg-gradient-to-br from-black via-slate-900 to-black border-yellow-200 group-hover:border-moon-gold shadow shadow-moon-white w-[300px] lg:w-[350px] h-[100px] flex flex-col items-center text-center rounded-md">
-            <h6 className="mt-7 tracking-widest text-indigo-100 group-hover:text-white max-w-[250px] lg:max-w-[320px] text-center truncate">
+            <h6 className="mt-7 tracking-widest text-indigo-100 group-hover:text-white max-w-[250px] lg:max-w-[320px] text-center truncate"
+              style={{...((notListedCount != false) ? {
+                  marginTop: '1em',
+                } : {})
+              }}
+            >
               {(info && info.name) ? (
                 <>{info.name}</>
               ) : (
                 <>{`...`}</>
               )}
             </h6>
+            {notListedCount !== false && (
+              <p className="mt-[7px] text-sm flex items-center">
+                <span className="opacity-60">Your not listed</span>
+                <span className="ml-[14px] flex items-center gap-[6px]">
+                  {notListedCount}
+                </span>
+              </p>
+            )}
             <p className="mt-[7px] text-sm flex items-center">
               {!isSell && !isMy && (
                 <>

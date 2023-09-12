@@ -21,7 +21,8 @@ import fetchMarketInfo from '/helpers/fetchMarketInfo'
 
 import useWeb3 from "/helpers/useWeb3"
 import fetchUserNfts from "/helpers/fetchUserNfts"
-
+import { getLink } from "/helpers/getLink"
+import useUrlHash from "/helpers/useUrlHash"
 
 
 const MarketCollection: NextPage = (props) => {
@@ -33,6 +34,7 @@ const MarketCollection: NextPage = (props) => {
     isOwner,
   } = props
 
+  
   /* HASH ROUTING */
   const router = useRouter();
   const subRouter = (router.asPath.split('#')[1] || '').split('/');
@@ -40,23 +42,25 @@ const MarketCollection: NextPage = (props) => {
     _collectionAddress,
     _action,
   ] = (router.asPath.split('#')[1] || '').split('/');
+  
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
   const [ isSell, setIsSell ] = useState(_action == `sell`)
   const [ isMy, setIsMy ] = useState(_action == `my_listed`)
   
+  const urlHash = useUrlHash()
+  
   useEffect(() => {
-    const onHashChangeStart = (url) => {
+    console.log('>>> HASH', urlHash)
+    if (urlHash) {
       const [
         _collectionAddress,
         _action
-      ] = (url.split('#')[1] || '').split('/');
+      ] = urlHash.split('/')
       setCollectionAddress(_collectionAddress)
       setIsSell(_action == `sell`)
       setIsMy(_action == `my_listed`)
     }
-    router.events.on("hashChangeStart", onHashChangeStart)
-    return () => { router.events.off("hashChangeStart", onHashChangeStart) }
-  }, [router.events])
+  }, [ urlHash ])
   /* ---- END HASH ROUTING ----- */
   
 
@@ -233,6 +237,7 @@ const MarketCollection: NextPage = (props) => {
       <h2 className="font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100"
         style={{
           marginTop: '2em',
+          textAlign: 'center'
         }}
       >
         {title}
@@ -277,26 +282,32 @@ const MarketCollection: NextPage = (props) => {
                   </span>
                 </p>
                 */}
-                <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
-                  Listed
-                  <span className="max-w-[60px] truncate xl:max-w-[90px]">
-                    {marketInfo ? marketInfo.collectionListing[collectionAddress] : 0 }
-                  </span>
-                </p>
+                <a href={getLink('collection', `${collectionAddress}`)}>
+                  <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                    Listed
+                    <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                      {marketInfo ? marketInfo.collectionListing[collectionAddress] : 0 }
+                    </span>
+                  </p>
+                </a>
                 {connectedAddress && (
                   <>
-                    <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
-                      Your listed
-                      <span className="max-w-[60px] truncate xl:max-w-[90px]">
-                        {marketInfo && marketInfo.userCollectionListed ? marketInfo.userCollectionListed[collectionAddress] : 0 }
-                      </span>
-                    </p>
-                    <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
-                      Your NFTs
-                      <span className="max-w-[60px] truncate xl:max-w-[90px]">
-                        {collectionInfo?.balance || 0 }
-                      </span>
-                    </p>
+                    <a href={getLink('collection', `${collectionAddress}/my_listed`)}>
+                      <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                        Your listed
+                        <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                          {marketInfo && marketInfo.userCollectionListed ? marketInfo.userCollectionListed[collectionAddress] : 0 }
+                        </span>
+                      </p>
+                    </a>
+                    <a href={getLink('collection', `${collectionAddress}/sell`)}>
+                      <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                        Your NFTs
+                        <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                          {collectionInfo?.balance || 0 }
+                        </span>
+                      </p>
+                    </a>
                   </>
                 )}
                 <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
@@ -317,7 +328,7 @@ const MarketCollection: NextPage = (props) => {
         {isMy && connectedAddress && (
           <>{renderSubHeader(`Your listed NFTs from this collection`)}</>
         )}
-        {(!tokensAtSaleFetching && !isMy && (!isSell || !connectedAddress)) && (
+        {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress)) && (
           <>{renderSubHeader(`NFTs listed at Marketplace`)}</>
         )}
         {userTokensFetched && isSell && connectedAddress && (
@@ -355,7 +366,7 @@ const MarketCollection: NextPage = (props) => {
               )}
             </>
           )}
-          {(!tokensAtSaleFetching && !isMy && (!isSell || !connectedAddress)) && (
+          {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress)) && (
             <>
               {tokensAtSale.map((tokenInfo, index) => {
                 const {
