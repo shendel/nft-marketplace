@@ -416,6 +416,7 @@ const MarketAsset: NextPage = (props) => {
                   </div>
                   {(
                     marketTokenInfo
+                    && connectedAddress
                     && (marketTokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase())
                   ) && (
                     <div className="flex justify-evenly items-center">
@@ -432,7 +433,11 @@ const MarketAsset: NextPage = (props) => {
                     isSellCurrencyFetched
                     && sellCurrency
                     && marketTokenInfo
-                    && (marketTokenInfo.seller.toLowerCase() !== connectedAddress.toLowerCase())
+                    && (
+                      !connectedAddress
+                      || 
+                      (marketTokenInfo.seller.toLowerCase() !== connectedAddress.toLowerCase())
+                    )
                     && marketTokenInfo.price
                   ) && (
                     <div className="flex justify-evenly items-center">
