@@ -21,7 +21,7 @@ export default function Header(props) {
     }
   ]
   const chainId = 5
-  const [
+  const {
     isWalletConnecting,
     isConnected,
     address,
@@ -29,7 +29,7 @@ export default function Header(props) {
     activeWeb3,
     connectWeb3,
     switchChainId
-  ] = useWeb3(chainId)
+  } = useWeb3(chainId)
   
 
   const [ isMobileMenuOpened, setIsMobileMenuOpened ] = useState(false)

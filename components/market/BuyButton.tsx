@@ -1,8 +1,13 @@
 import useWeb3 from "/helpers/useWeb3"
 import { useEffect, useState } from "react"
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
+import callMPMethod from "/helpers/callMPMethod"
 import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 import BigNumber from "bignumber.js"
+
+import approveToken from "/helpers/approveToken"
+
+import Button from "./Button"
 
 export default function BuyButton(options) {
   const {
@@ -11,22 +16,99 @@ export default function BuyButton(options) {
     marketTokenInfo,
     price,
     currency,
-  } = options
+    onBuy,
+  } = {
+    onBuy: () => {},
+    ...options
+  }
+    
   
-  const [
+  const {
     isWalletConnecting,
     isConnected,
+    isSwitchChain,
     address,
     activeChainId,
     activeWeb3,
     connectWeb3,
     switchChainId
-  ] = useWeb3(chainId)
+  } = useWeb3(chainId)
 
+console.log('>>> marketTokenInfo', marketTokenInfo)
+  const addNotify = (msg, style) => {
+    console.log('>>> NOTIFY', style, msg)
+  }
 
   const [ sellCurrency, setSellCurrency ] = useState(false)
   const [ isSellCurrencyFetched, setIsSellCurrencyFetched ] = useState(false)
   const [ needApprove, setNeedApprove ] = useState(true)
+
+  const [ isBuyLot, setIsBuyLot ] = useState(false)
+  const doBuyLot = () => {
+
+    addNotify(`Buying NFT. Confirm transaction`)
+    setIsBuyLot(true)
+    callMPMethod({
+      activeWeb3,
+      contractAddress: marketplaceContract,
+      method: marketTokenInfo.erc20 == ZERO_ADDRESS ? 'buyNFT' : 'buyNFTbyERC20',
+      ...(marketTokenInfo.erc20 == ZERO_ADDRESS
+        ? {
+          weiAmount: marketTokenInfo.price.toString()
+        } : {}
+      ),
+      args: [
+        marketTokenInfo.collection,
+        marketTokenInfo.tokenId.toString()
+      ],
+      onTrx: (txHash) => {
+        console.log('>> onTrx', txHash)
+        addNotify(`Buy NFT TX ${txHash}`, `success`)
+      },
+      onSuccess: (receipt) => {},
+      onError: (err) => {
+        console.log('>> onError', err)
+        addNotify(`Fail buy NFT. ${err.message ? err.message : ''}`, `error`)
+        setIsBuyLot(false)
+      },
+      onFinally: (answer) => {
+        addNotify(`NFT success buyed`, `success`)
+        setIsBuyLot(false)
+      }
+    })
+  }
+
+  const [ isApproving, setIsApproving ] = useState(false)
+
+  const doApproveAndBuy = (lotIndex) => {
+    addNotify(`Approving... Confirm transaction`)
+
+    const {
+      erc20,
+      price,
+    } = marketTokenInfo
+
+    setIsApproving(true)
+    approveToken({
+      activeWeb3,
+      chainId,
+      tokenAddress: erc20,
+      approveFor: marketplaceContract,
+      weiAmount: price.toString(),
+      onTrx: (hash) => {
+        addNotify(`Approving TX hash ${hash}`, `success`)
+      },
+      onFinally: () => {
+        addNotify(`Approved`, `success`)
+        setIsApproving(false)
+        doBuyLot()
+      },
+      onError: (err) => {
+        setIsApproving(false)
+        addNotify(`Fail approve token. ${err.message ? err.message : ''}`, `error`)
+      }
+    })
+  }
   
   useEffect(() => {
     if (address) {
@@ -57,48 +139,26 @@ export default function BuyButton(options) {
   return (
     <>
       {!address && (
-        <button 
-          className="connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3" 
-          type="button" 
-          aria-label="Connect Wallet"
-          style={{minWidth: '140px'}}
-          onClick={() => { connectWeb3() }}
-        >
+        <Button onClick={() => { connectWeb3() }} isLoading={isWalletConnecting}>
           Connect Wallet
-        </button>
+        </Button>
       )}
       {address && (
         <>
           {`${activeChainId}` !== `${chainId}` ? (
-            <button 
-              className="connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3" 
-              type="button" 
-              aria-label="Buy NFT lot"
-              style={{minWidth: '140px'}}
-              onClick={() => { switchChainId() }}
-            >
+            <Button onClick={() => { switchChainId() }} isLoading={isSwitchChain}>
               Switch to {needChainInfo.chainName}
-            </button>
+            </Button>
           ) : (
             <>
               {(marketTokenInfo.erc20 !== ZERO_ADDRESS && isSellCurrencyFetched && needApprove) ? (
-                <button 
-                  className="connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3" 
-                  type="button" 
-                  aria-label="Approve"
-                  style={{minWidth: '140px'}}
-                >
+                <Button onClick={doApproveAndBuy} isLoading={isApproving || isBuyLot}>
                   Approve & Buy 1 for {price} {currency}
-                </button>
+                </Button>
               ) : (
-                <button 
-                  className="connect-button tw-web3button--connect-wallet tw-connect-wallet css-1un3lp3" 
-                  type="button" 
-                  aria-label="Buy NFT lot"
-                  style={{minWidth: '140px'}}
-                >
+                <Button onClick={doBuyLot} isLoading={isBuyLot}>
                   Buy 1 for {price} {currency}
-                </button>
+                </Button>
               )}
             </>
           )}

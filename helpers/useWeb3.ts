@@ -14,6 +14,7 @@ const useWeb3 = (chainId) => {
   const [ activeWeb3, setActiveWeb3 ] = useState(false)
   const [ activeChainId, setActiveChainId ] = useState(false)
   const [ address, setAddress ] = useState(false)
+  const [ isSwitchChain, setIsSwitchChain ] = useState(false)
   
   const initOnWeb3Ready = async () => {
     if (activeWeb3 && (`${activeChainId}` == `${chainId}`)) {
@@ -58,10 +59,6 @@ const useWeb3 = (chainId) => {
     })
   }
   
-  const doSwitchNetwork = () => {
-    switchOrAddChain(chainId)
-  }
-  
   onBlockchainChanged((chainData) => {
     initOnWeb3Ready()
   })
@@ -71,18 +68,22 @@ const useWeb3 = (chainId) => {
   }
   
   const switchChainId = (newChainId) => {
-    switchOrAddChain(newChainId || chainId)
+    setIsSwitchChain(true)
+    switchOrAddChain(newChainId || chainId).then((isSwitched) => {
+      setIsSwitchChain(false)
+    })
   }
   
-  return [
+  return {
     isWalletConnecting,
     isConnected,
+    isSwitchChain,
     address,
     activeChainId,
     activeWeb3,
     connectWeb3,
     switchChainId
-  ]
+  }
 }
 
 
