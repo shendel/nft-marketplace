@@ -1,4 +1,4 @@
-import { setupWeb3, switchOrAddChain, doConnectWithMetamask, isMetamaskConnected, onWalletChanged, getConnectedAddress } from "/helpers/setupWeb3"
+import useWeb3 from "/helpers/useWeb3"
 import { useEffect, useState } from "react"
 import FaIcon from "/components/FaIcon"
 import { getLink } from "/helpers/getLink"
@@ -20,56 +20,17 @@ export default function Header(props) {
       href: getLink(`sell`)
     }
   ]
-  
-  const [ isWalletConnection, setIsWalletConnecting ] = useState(false)
-  const [ activeWeb3, setActiveWeb3 ] = useState(false)
-  const [ activeChainId, setActiveChainId ] = useState(false)
-  const [ address, setAddress ] = useState(false)
   const chainId = 5
+  const [
+    isWalletConnecting,
+    isConnected,
+    address,
+    activeChainId,
+    activeWeb3,
+    connectWeb3,
+    switchChainId
+  ] = useWeb3(chainId)
   
-  const initOnWeb3Ready = async () => {
-    if (activeWeb3 && (`${activeChainId}` == `${chainId}`)) {
-      window.tt = activeWeb3
-      activeWeb3.eth.getAccounts().then((accounts) => {
-        setAddress(accounts[0] || false)
-
-      }).catch((err) => {
-        console.log('>>> initOnWeb3Ready', err)
-      })
-    } else {
-      const _isConnected = await isMetamaskConnected()
-      if (_isConnected) {
-        connectWithMetamask()
-      } else {
-        setAddress(false)
-      }
-    }
-  }
-
-  useEffect(() => {
-    initOnWeb3Ready()
-  }, [ activeWeb3 ])
-  
-  onWalletChanged(() => { initOnWeb3Ready() })
-  
-  const connectWithMetamask = async () => {
-    console.log('>>> call connectWithMetamask')
-    doConnectWithMetamask({
-      onBeforeConnect: () => { setIsWalletConnecting(true) },
-      onSetActiveChain: setActiveChainId,
-      onConnected: async (cId, web3) => {
-        console.log('>>> onConnected')
-        setActiveWeb3((`${cId}` == `${chainId}`) ? web3 : false)
-        setIsWalletConnecting(false)
-        if (!web3) {
-          setAddress(await getConnectedAddress())
-        }
-      },
-      onError: (err) => {
-        setIsWalletConnecting(false)
-      },
-    })
-  }
 
   const [ isMobileMenuOpened, setIsMobileMenuOpened ] = useState(false)
   
@@ -185,7 +146,7 @@ export default function Header(props) {
                     </button>
                   ) : (
                     <button
-                      onClick={connectWithMetamask}
+                      onClick={() => { connectWeb3() }}
                       className="!px-5 !rounded-[2px] tw-connect-wallet css-1un3lp3" 
                       type="button" 
                       style={{ minWidth: '140px' }}
@@ -245,7 +206,7 @@ export default function Header(props) {
               )}
               {!address && (
                 <button 
-                  onClick={connectWithMetamask}
+                  onClick={() => { connectWeb3() } }
                   className="connect-button tw-connect-wallet css-1un3lp3"
                   data-theme="dark"
                   data-is-loading="false"

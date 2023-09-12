@@ -1,12 +1,4 @@
-import {
-  setupWeb3,
-  switchOrAddChain,
-  onBlockchainChanged,
-  doConnectWithMetamask,
-  isMetamaskConnected,
-  onWalletChanged,
-  getConnectedAddress 
-} from "/helpers/setupWeb3"
+import useWeb3 from "/helpers/useWeb3"
 import { useEffect, useState } from "react"
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
 import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
@@ -21,30 +13,16 @@ export default function BuyButton(options) {
     currency,
   } = options
   
-  const [ isWalletConnection, setIsWalletConnecting ] = useState(false)
-  const [ activeWeb3, setActiveWeb3 ] = useState(false)
-  const [ activeChainId, setActiveChainId ] = useState(false)
-  const [ address, setAddress ] = useState(false)
+  const [
+    isWalletConnecting,
+    isConnected,
+    address,
+    activeChainId,
+    activeWeb3,
+    connectWeb3,
+    switchChainId
+  ] = useWeb3(chainId)
 
-
-  const initOnWeb3Ready = async () => {
-    if (activeWeb3 && (`${activeChainId}` == `${chainId}`)) {
-      window.tt = activeWeb3
-      activeWeb3.eth.getAccounts().then((accounts) => {
-        setAddress(accounts[0] || false)
-
-      }).catch((err) => {
-        console.log('>>> initOnWeb3Ready', err)
-      })
-    } else {
-      const _isConnected = await isMetamaskConnected()
-      if (_isConnected) {
-        connectWithMetamask()
-      } else {
-        setAddress(false)
-      }
-    }
-  }
 
   const [ sellCurrency, setSellCurrency ] = useState(false)
   const [ isSellCurrencyFetched, setIsSellCurrencyFetched ] = useState(false)
@@ -73,37 +51,6 @@ export default function BuyButton(options) {
       }
     }
   }, [ address ])
-  useEffect(() => {
-    initOnWeb3Ready()
-  }, [ activeWeb3 ])
-  
-  const onConnect = async () => {
-    initOnWeb3Ready()
-  }
-  onWalletChanged(onConnect)
-  const connectWithMetamask = async () => {
-    doConnectWithMetamask({
-      onBeforeConnect: () => { setIsWalletConnecting(true) },
-      onSetActiveChain: setActiveChainId,
-      onConnected: async (cId, web3) => {
-        setIsWalletConnecting(false)
-        setActiveWeb3((`${cId}` == `${chainId}`) ? web3 : false)
-        if (!web3) {
-          setAddress(await getConnectedAddress())
-        }
-      },
-      onError: (err) => {
-        setIsWalletConnecting(false)
-      },
-    })
-  }
-  
-  const doSwitchNetwork = () => {
-    switchOrAddChain(chainId)
-  }
-  onBlockchainChanged((chainData) => {
-    initOnWeb3Ready()
-  })
   
   const needChainInfo = CHAIN_INFO(chainId)
   
@@ -115,7 +62,7 @@ export default function BuyButton(options) {
           type="button" 
           aria-label="Connect Wallet"
           style={{minWidth: '140px'}}
-          onClick={connectWithMetamask}
+          onClick={() => { connectWeb3() }}
         >
           Connect Wallet
         </button>
@@ -128,7 +75,7 @@ export default function BuyButton(options) {
               type="button" 
               aria-label="Buy NFT lot"
               style={{minWidth: '140px'}}
-              onClick={doSwitchNetwork}
+              onClick={() => { switchChainId() }}
             >
               Switch to {needChainInfo.chainName}
             </button>
