@@ -19,10 +19,12 @@ const fetchMarketInfo = (options) => {
     onlyTokens,
     onlyInfo,
     userAddress,
+    forAddress,
   } = {
     onlyTokens: false,
     onlyInfo: false,
     userAddress: false,
+    forAddress: false,
     collectionAddress: false,
     ...options
   }
@@ -43,33 +45,52 @@ const fetchMarketInfo = (options) => {
           calls: 
             (userAddress)
               ? {
-                tokens: { func: 'getUserTokensAtSale', args: [ userAddress ] }
+                tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress ] }
               } : (onlyTokens)
                 ? {
-                  tokensAtSaleCount:{ func: 'getTokensAtSaleCount' },
-                  tokensAtSale:     { func: 'getTokensAtSale' },
+                  tokensAtSaleCount:        { func: 'getTokensAtSaleCount' },
+                  tokensAtSale:             { func: 'getTokensAtSale' },
                 } : {
-                  isMPContract:     { func: 'isMarketPlaceContract' },
-                  owner:            { func: 'owner' },
-                  version:          { func: 'version' },
-                  nftCollections:   { func: 'getAllowedCollections' },
-                  tradeFee:         { func: 'getTradeFee' },
+                  isMPContract:             { func: 'isMarketPlaceContract' },
+                  owner:                    { func: 'owner' },
+                  version:                  { func: 'version' },
+                  nftCollections:           { func: 'getAllowedCollections' },
+                  collectionListing:        { func: 'getCollectionsTokensCount' },
+                  ...((forAddress)
+                    ? {
+                      userCollectionListed: { func: 'getUserCollectionsTokenCount', args: [ forAddress ] }
+                    } : {}
+                  ),
+                  tradeFee:                 { func: 'getTradeFee' },
                   ...((!onlyInfo && !collectionAddress)
                     ? {
-                      tokensAtSaleCount:{ func: 'getTokensAtSaleCount' },
-                      tokensAtSale:     { func: 'getTokensAtSale' },
+                      tokensAtSaleCount:    { func: 'getTokensAtSaleCount' },
+                      tokensAtSale:         { func: 'getTokensAtSale' },
                     } : {}
                   ),
                   ...((collectionAddress)
                     ? {
-                      tokensAtSale: { func: 'getCollectionTokensAtSale', args: [ collectionAddress ] },
+                      tokensAtSale:         { func: 'getCollectionTokensAtSale', args: [ collectionAddress ] },
                     } : {}
                   ),
-                  allowedERC20:     { func: 'getAllowedERC20' },
-                  feeReceiver:      { func: 'getFeeReceiver' },
+                  allowedERC20:             { func: 'getAllowedERC20' },
+                  feeReceiver:              { func: 'getFeeReceiver' },
                 }
         }).then((mcAnswer) => {
-          console.log('>> market mc info', mcAnswer)
+          if (mcAnswer.collectionListing) {
+            let _collectionListing = {}
+            Object.keys(mcAnswer.collectionListing).map((key) => {
+              _collectionListing[mcAnswer.collectionListing[key].collection] = mcAnswer.collectionListing[key].count
+            })
+            mcAnswer.collectionListing = _collectionListing
+          }
+          if (mcAnswer.userCollectionListed) {
+            let _userCollectionListed = {}
+            Object.keys(mcAnswer.userCollectionListed).map((key) => {
+              _userCollectionListed[mcAnswer.userCollectionListed[key].collection] = mcAnswer.userCollectionListed[key].count
+            })
+            mcAnswer.userCollectionListed = _userCollectionListed
+          }
           resolve({
             chainId,
             address,

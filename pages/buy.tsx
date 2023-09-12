@@ -386,6 +386,7 @@ const Market: NextPage = (props) => {
                           isLoading={collectionsInfo[nftAddress] === undefined}
                           collectionInfo={collectionsInfo[nftAddress] || false}
                           collectionMeta={collectionsMeta[nftAddress] || false}
+                          listedCount={marketInfo.collectionListing[nftAddress]}
                         />
                       )
                     })}

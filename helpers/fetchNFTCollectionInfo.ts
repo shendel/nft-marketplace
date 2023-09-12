@@ -14,8 +14,12 @@ import { callMulticall } from './callMulticall'
 const fetchNFTCollectionInfo = (options) => {
   const {
     address,
+    forAddress,
     chainId
-  } = options
+  } = {
+    forAddress: false,
+    ...options
+  }
 
   return new Promise((resolve, reject) => {
     const chainInfo = CHAIN_INFO(chainId)
@@ -32,6 +36,11 @@ const fetchNFTCollectionInfo = (options) => {
           encoder: abiI,
           calls: {
             owner:            { func: 'owner' },
+            ...((forAddress)
+              ? {
+                balance: { func: 'balanceOf', args: [ forAddress ] }
+              } : {}
+            ),
             totalSupply:      { func: 'totalSupply', _isBigNumber: true },
             maxSupply:        { func: 'MAX_SUPPLY', _isBigNumber: true },
             name:             { func: 'name' },

@@ -82,6 +82,7 @@ const MarketCollection: NextPage = (props) => {
       fetchNFTCollectionMeta({
         chainId: chainId,
         address: collectionAddress,
+        forAddress: connectedAddress,
       }).then((_collectionInfo) => {
         setCollectionInfo(_collectionInfo)
         console.log('>>> _collectionInfo', _collectionInfo)
@@ -89,7 +90,7 @@ const MarketCollection: NextPage = (props) => {
         console.log('>>> fail fetch collection info', err)
       })
     }
-  }, [ collectionAddress, chainId ] )
+  }, [ collectionAddress, chainId, connectedAddress ] )
   
   // Fetch market info
   const [ marketInfo, setMarketInfo ] = useState(false)
@@ -104,6 +105,7 @@ const MarketCollection: NextPage = (props) => {
         address: marketplaceContract, 
         chainId,
         collectionAddress,
+        forAddress: connectedAddress
       }).then((_marketInfo) => {
         console.log('>>> MARKET INFO', _marketInfo)
         setMarketInfo(_marketInfo)
@@ -121,7 +123,7 @@ const MarketCollection: NextPage = (props) => {
         console.log('>>> fail fetch market info', err)
       })
     }
-  }, [ chainId, marketplaceContract, collectionAddress ])
+  }, [ chainId, marketplaceContract, collectionAddress, connectedAddress ])
   // Fetch info about allowed erc20
   const [ allowedERC20Info, setAllowedERC20Info ] = useState(false)
   
@@ -262,9 +264,25 @@ const MarketCollection: NextPage = (props) => {
                 <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
                   Listed
                   <span className="max-w-[60px] truncate xl:max-w-[90px]">
-                    {collectionInfo.listed || 0 }
+                    {marketInfo ? marketInfo.collectionListing[collectionAddress] : 0 }
                   </span>
                 </p>
+                {connectedAddress && (
+                  <>
+                    <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                      Your listed
+                      <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                        {marketInfo && marketInfo.userCollectionListed ? marketInfo.userCollectionListed[collectionAddress] : 0 }
+                      </span>
+                    </p>
+                    <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                      Your NFTs
+                      <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                        {collectionInfo?.balance || 0 }
+                      </span>
+                    </p>
+                  </>
+                )}
                 <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
                   Supply
                   <span className="max-w-[60px] truncate xl:max-w-[90px]">
@@ -281,7 +299,7 @@ const MarketCollection: NextPage = (props) => {
           </div>
         )}
         <div className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
-          {!tokensAtSaleFetching && !isSell && (
+          {(!tokensAtSaleFetching && (!isSell || !connectedAddress)) && (
             <>
               {tokensAtSale.map((tokenInfo, index) => {
                 const {
@@ -306,7 +324,7 @@ const MarketCollection: NextPage = (props) => {
               })}
             </>
           )}
-          {userTokensFetched && isSell && (
+          {userTokensFetched && isSell && connectedAddress && (
             <>
               {userTokens.map(( { tokenId } = tokenInfo, index) => {
                 return (

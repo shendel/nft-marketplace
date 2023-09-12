@@ -336,8 +336,20 @@ export default function SellNftForm(options) {
             Price:
           </p>
           <div className="form">
-            <input className={(hasSellPriceError) ? 'has-error' : ''} value={sellPrice} onChange={(e) => { updateSellPrice(e.target.value) }} type="number" min="0" step="0.001" />
-            <select value={sellCurrency} onChange={(e) => { setSellCurrency(e.target.value) }}>
+            <input 
+              className={(hasSellPriceError) ? 'has-error' : ''}
+              value={sellPrice}
+              onChange={(e) => { updateSellPrice(e.target.value) }}
+              type="number"
+              min="0"
+              step="0.001" 
+              disabled={isApprovedFetching || isApproving || isSelling}
+            />
+            <select
+              value={sellCurrency}
+              onChange={(e) => { setSellCurrency(e.target.value) }}
+              disabled={isApprovedFetching || isApproving || isSelling}
+            >
               <option value={ZERO_ADDRESS}>{nativeCurrency.symbol} (Native)</option>
               {Object.keys(allowedERC20Info).length > 0 && (
                 <>

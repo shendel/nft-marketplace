@@ -55,7 +55,7 @@ const SellPage: NextPage = (props) => {
   } = useWeb3(chainId)
   
 
-  const [ marketInfo, setMarketInfo ] = useState({})
+  const [ marketInfo, setMarketInfo ] = useState(false)
   const [ marketInfoFetched, setMarketInfoFetched ] = useState(false)
 
   useEffect(() => {
@@ -63,7 +63,8 @@ const SellPage: NextPage = (props) => {
       fetchMarketInfo({
         address: marketplaceContract, 
         chainId,
-        onlyInfo: true
+        onlyInfo: true,
+        forAddress: connectedAddress,
       }).then((_marketInfo) => {
         setMarketInfo(_marketInfo)
         setMarketInfoFetched(true)
@@ -71,7 +72,7 @@ const SellPage: NextPage = (props) => {
         console.log('>>> fail fetch market info', err)
       })
     }
-  }, [ chainId, marketplaceContract])
+  }, [ chainId, marketplaceContract, connectedAddress ])
   
   useEffect(() => {
     if (storageData
@@ -191,6 +192,7 @@ const SellPage: NextPage = (props) => {
                           isLoading={collectionsInfo[nftAddress] === undefined}
                           collectionInfo={collectionsInfo[nftAddress] || false}
                           collectionMeta={collectionsMeta[nftAddress] || false}
+                          userListedCount={marketInfo.userCollectionListed ? marketInfo.userCollectionListed[nftAddress] : 0}
                           isSell={true}
                         />
                       )

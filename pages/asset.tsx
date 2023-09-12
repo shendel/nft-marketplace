@@ -360,7 +360,7 @@ const MarketAsset: NextPage = (props) => {
                     <>
                       {!isSellOpened && (
                         <div className="flex justify-evenly items-center">
-                          <Button onClick={switchIsSellOpened} >{`Sell NFT token`}</Button>
+                          <Button onClick={switchIsSellOpened} >{`Sell this NFT token`}</Button>
                         </div>
                       )}
                       {isSellOpened && (

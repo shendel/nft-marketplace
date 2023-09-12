@@ -6,8 +6,12 @@ export default function CollectionCard(options) {
     address,
     collectionInfo,
     collectionMeta,
+    listedCount,
+    userListedCount,
     isSell,
   } = {
+    listedCount: 0,
+    userListedCount: 0,
     isLoading: false,
     collectionInfo: false,
     collectionMeta: false,
@@ -97,6 +101,23 @@ export default function CollectionCard(options) {
               )}
             </h6>
             <p className="mt-[7px] text-sm flex items-center">
+              {!isSell && (
+                <>
+                  <span className="opacity-60">Listed</span>
+                  <span className="ml-[14px] flex items-center gap-[6px]">
+                    {listedCount}
+                  </span>
+                </>
+              )}
+              {isSell && (
+                <>
+                  <span className="opacity-60">Your listed</span>
+                  <span className="ml-[14px] flex items-center gap-[6px]">
+                    {userListedCount}
+                  </span>
+                </>
+              )}
+              
               {/*
               <span className="opacity-60">Floor</span>
               <span className="ml-[14px] flex items-center gap-[6px]">

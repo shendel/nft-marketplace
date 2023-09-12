@@ -5,13 +5,18 @@ import fetchNFTCollectionInfo from "/helpers/fetchNFTCollectionInfo"
 const fetchNFTCollectionMeta = (options) => {
   const {
     address,
-    chainId
-  } = options
+    chainId,
+    forAddress,
+  } = {
+    forAddress: false,
+    ...options
+  }
   
   return new Promise((resolve, reject) => {
     fetchNFTCollectionInfo({
       chainId,
       address,
+      forAddress,
     }).then( async (collectionInfo) => {
       let collectionMetaJson = false
       let collectionZeroJson = false

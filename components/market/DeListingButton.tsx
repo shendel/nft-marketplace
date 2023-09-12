@@ -64,7 +64,7 @@ export default function DeListingButton(options) {
         </Button>
       ) : (
         <Button onClick={doDeListing} isLoading={isDeListing}>
-          {`De-List NFT from Marketplace`}
+          {`De-List this NFT from Marketplace`}
         </Button>
       )}
     </>

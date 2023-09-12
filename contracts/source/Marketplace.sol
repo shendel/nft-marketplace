@@ -1421,6 +1421,8 @@ contract Marketplace is Ownable, Pausable {
 
     mapping(address => uint256) private _userTokensCount;
 
+    mapping(address => mapping(address => uint256)) private _userTokensCountByCollections;
+
     address private _feeReceiver;
 
     function marketTokensGet(address collection, uint256 tokenId) public view returns (SelledNFT memory ret) {
@@ -1436,10 +1438,43 @@ contract Marketplace is Ownable, Pausable {
         return ret;
     }
 
+    function getColletionTokensCount(address collection) public view returns (uint256) {
+        return _collectionTokensCount[collection];
+    }
+    function getUserCollectionTokensCount(address user, address collection) public view returns(uint256) {
+        return _userTokensCountByCollections[user][collection];
+    }
+    
+    struct CollectionTokenCount {
+        address collection;
+        uint256 count;
+    }
+    function getCollectionsTokensCount() public view returns (CollectionTokenCount[] memory ret) {
+        ret = new CollectionTokenCount[](_marketCollections.length);
+        for(uint256 i = 0; i < _marketCollections.length; i++) {
+            ret[i] = CollectionTokenCount(
+                address(_marketCollections[i]),
+                _collectionTokensCount[address(_marketCollections[i])]
+            );
+        }
+        return ret;
+    }
+    function getUserCollectionsTokenCount(address user) public view returns(CollectionTokenCount[] memory ret) {
+        ret = new CollectionTokenCount[](_marketCollections.length);
+        for(uint256 i = 0; i < _marketCollections.length; i++) {
+            ret[i] = CollectionTokenCount(
+                address(_marketCollections[i]),
+                _userTokensCountByCollections[user][address(_marketCollections[i])]
+            );
+        }
+        return ret;
+    }
+
     function _marketTokensAdd(SelledNFT memory lotInfo) internal {
         _marketTokens.push(lotInfo);
         _collectionTokensCount[lotInfo.collection]++;
         _userTokensCount[lotInfo.seller]++;
+        _userTokensCountByCollections[lotInfo.seller][lotInfo.collection]++;
     }
     function _marketTokensDel(address collection, uint256 tokenId) internal {
         if (
@@ -1448,6 +1483,7 @@ contract Marketplace is Ownable, Pausable {
             (_marketTokens[_marketTokens.length - 1].tokenId == tokenId)
         ) {
             _userTokensCount[_marketTokens[_marketTokens.length -1].seller]--;
+            _userTokensCountByCollections[_marketTokens[_marketTokens.length -1].seller][collection]--;
             _collectionTokensCount[collection]--;
             _marketTokens.pop();
         }
@@ -1458,6 +1494,7 @@ contract Marketplace is Ownable, Pausable {
                 (_marketTokens[i].tokenId == tokenId)
             ) {
                 _userTokensCount[_marketTokens[i].seller]--;
+                _userTokensCountByCollections[_marketTokens[i].seller][collection]--;
                 _collectionTokensCount[collection]--;
                 _marketTokens[i] = _marketTokens[_marketTokens.length -1];
                 _marketTokens.pop();
