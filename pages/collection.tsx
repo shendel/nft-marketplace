@@ -399,7 +399,7 @@ const MarketCollection: NextPage = (props) => {
           <>{renderSubHeader(`NFTs listed at Marketplace`)}</>
         )}
         {userTokensFetched && isSell && connectedAddress && (
-          <>{renderSubHeader(`Your not listed NFTs from this collection`)}</>
+          <>{renderSubHeader(`Your tokens from this collection, not listed for sale.`)}</>
         )}
         
         {isAll && allTokensFetching  && (
