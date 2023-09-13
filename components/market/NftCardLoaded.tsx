@@ -19,7 +19,9 @@ export default function NftCard(props) {
     isDeList,
     tokenId: _tokenId,
     collection: _collection,
+    isShow,
   } = {
+    isShow: false,
     tokenId: false,
     collection: false,
     allowedERC20Info: false,
@@ -220,7 +222,9 @@ export default function NftCard(props) {
                   ? `De-List`
                   : (isSell)
                     ? `Sell now`
-                    : `Buy now`
+                    : (isShow)
+                      ? `More info`
+                      : `Buy now`
                 }
               </a>
             </button>

@@ -18,11 +18,13 @@ import NftCardSceleton from "/components/market/NftCardSceleton"
 import NftCard from "/components/market/NftCard"
 
 import fetchMarketInfo from '/helpers/fetchMarketInfo'
+import fetchNFTCollectionAllTokens from '/helpers/fetchNFTCollectionAllTokens'
 
 import useWeb3 from "/helpers/useWeb3"
 import fetchUserNfts from "/helpers/fetchUserNfts"
 import { getLink } from "/helpers/getLink"
 import useUrlHash from "/helpers/useUrlHash"
+import Button from "/components/market/Button"
 
 
 const MarketCollection: NextPage = (props) => {
@@ -46,6 +48,7 @@ const MarketCollection: NextPage = (props) => {
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
   const [ isSell, setIsSell ] = useState(_action == `sell`)
   const [ isMy, setIsMy ] = useState(_action == `my_listed`)
+  const [ isAll, setIsAll ] = useState(_action == `all`)
   
   const urlHash = useUrlHash()
   
@@ -59,12 +62,14 @@ const MarketCollection: NextPage = (props) => {
       setCollectionAddress(_collectionAddress)
       setIsSell(_action == `sell`)
       setIsMy(_action == `my_listed`)
+      setIsAll(_action == `all`)
+      setViewOffset(0)
     }
   }, [ urlHash ])
   /* ---- END HASH ROUTING ----- */
   
 
-
+  
   const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
   const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
   
@@ -103,7 +108,36 @@ const MarketCollection: NextPage = (props) => {
   const [ marketInfoFetched, setMarketInfoFetched ] = useState(false)
   const [ tokensAtSale, setTokensAtSale ] = useState([])
   const [ tokensAtSaleFetching, setTokensAtSaleFetching ] = useState(true)
+  const [ userTokensAtSale, setUserTokensAtSale ] = useState([])
   
+  const [ allTokens, setAllTokens ] = useState([])
+  const [ allTokensFetched, setAllTokensFetched ] = useState(false)
+  const [ allTokensFetching, setAllTokensFetching ] = useState(false)
+  const [ allTokensFetchCurrent, setAllTokensFetchCurrent ] = useState(0)
+  const [ allTokensFetchTotal, setAllTokensFetchTotal ] = useState(0)
+
+  useEffect(() => {
+    if (isAll && collectionAddress && chainId) {
+      setAllTokensFetched(false)
+      setAllTokensFetching(true)
+      fetchNFTCollectionAllTokens({
+        chainId,
+        collectionAddress,
+        onFetching: (cursorPos, total) => {
+          setAllTokensFetchCurrent(cursorPos)
+          setAllTokensFetchTotal(total)
+        }
+      }).then((result) => {
+        setAllTokens(Web3ObjectToArray(result))
+        setAllTokensFetched(true)
+        setAllTokensFetching(false)
+      }).catch((err) => {
+        setAllTokensFetching(false)
+        console.log('>>> fetchNFTCollectionAllTokens', err)
+      })
+    }
+  }, [isAll])
+
   useEffect(() => {
     if (chainId && marketplaceContract) {
       setTokensAtSaleFetching(true)
@@ -122,6 +156,7 @@ const MarketCollection: NextPage = (props) => {
               return Number(a.utx) > Number(b.utx) ? -1 : 1
             })
         )
+
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)
 
@@ -187,8 +222,13 @@ const MarketCollection: NextPage = (props) => {
   useEffect(() => {
     if (marketInfo && collectionInfo) {
       doFetchTokenUrls(tokensAtSale)
+      if (connectedAddress) {
+        setUserTokensAtSale(tokensAtSale.filter((tokenInfo) => {
+          return tokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase()
+        }))
+      }      
     }
-  }, [ marketInfo, collectionInfo, tokensAtSale ])
+  }, [ marketInfo, collectionInfo, connectedAddress, tokensAtSale ])
   
   const [ userTokens, setUserTokens ] = useState([])
   const [ userTokensFetched, setUserTokensFetched ] = useState(false)
@@ -244,6 +284,28 @@ const MarketCollection: NextPage = (props) => {
       </h2>
     )
   }
+  
+  const renderLoader = (title) => {
+    return (
+      <div style={{paddingTop: '2em', paddingBottom: '2em' }}>
+        <p className="collectionLoading font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100">
+          {title}
+        </p>
+      </div>
+    )
+  }
+  
+  const [ viewOffset, setViewOffset ] = useState(0)
+  const viewLimit = 15
+  const doLoadMore = () => {
+    setViewOffset(viewOffset + viewLimit)
+  }
+  let showLoadMore = false
+  if (isMy && connectedAddress && (viewOffset + viewLimit) < userTokensAtSale.length ) showLoadMore = true
+  if (userTokensFetched && isSell && connectedAddress && (viewOffset + viewLimit) < userTokens.length ) showLoadMore = true
+  if (!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll && (viewOffset + viewLimit) < tokensAtSale.length ) showLoadMore = true
+  if (isAll && !allTokensFetching && (viewOffset + viewLimit) < allTokens.length) showLoadMore = true
+  
   return (
     <>
       <Header />
@@ -310,12 +372,14 @@ const MarketCollection: NextPage = (props) => {
                     </a>
                   </>
                 )}
-                <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
-                  Supply
-                  <span className="max-w-[60px] truncate xl:max-w-[90px]">
-                    {collectionInfo.totalSupply || 0 }
-                  </span>
-                </p>
+                <a href={getLink('collection', `${collectionAddress}/all`)}>
+                  <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                    Supply
+                    <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                      {collectionInfo.totalSupply || 0 }
+                    </span>
+                  </p>
+                </a>
               </div>
               <div className="mt-8 xl:mt-9 max-w-[320px] xl:max-w-[420px]">
                 <p className=" xl:text-base xl:leading-loose text-sm font-light leading-relaxed">
@@ -325,23 +389,49 @@ const MarketCollection: NextPage = (props) => {
             </div>
           </div>
         )}
+        {isAll && (
+          <>{renderSubHeader(`All NFTs from this collection`)}</>
+        )}
         {isMy && connectedAddress && (
           <>{renderSubHeader(`Your listed NFTs from this collection`)}</>
         )}
-        {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress)) && (
+        {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll) && (
           <>{renderSubHeader(`NFTs listed at Marketplace`)}</>
         )}
         {userTokensFetched && isSell && connectedAddress && (
           <>{renderSubHeader(`Your not listed NFTs from this collection`)}</>
         )}
+        
+        {isAll && allTokensFetching  && (
+          <>{renderLoader(`Fetching NFTs info ${(allTokensFetchTotal > 0) ? Math.round(allTokensFetchCurrent/allTokensFetchTotal*100) : 0}%`)}</>
+        )}
         <div className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
+          {isAll && (
+            <>
+              {allTokensFetched && !allTokensFetching && (
+                <>
+                  {allTokens.slice(0, viewOffset + viewLimit).map(( { tokenId, tokenURI } = tokenInfo, index) => {
+                    return (
+                      <div key={index}>
+                        <NftCard 
+                          mediaUrl={tokenURI}
+                          collection={collectionAddress}
+                          tokenId={tokenId}
+                          chainId={chainId}
+                          isShow={true}
+                        />
+                      </div>
+                    )
+                  })}
+                </>
+              )}
+            </>
+          )}
           {isMy && connectedAddress && (
             <>
               {!tokensAtSaleFetching && (
                 <>
-                {tokensAtSale.filter((tokenInfo) => {
-                  return tokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase()
-                }).map((tokenInfo, index) => {
+                {userTokensAtSale.slice(0, viewOffset + viewLimit).map((tokenInfo, index) => {
                   const {
                     tokenId,
                   } = tokenInfo
@@ -366,9 +456,9 @@ const MarketCollection: NextPage = (props) => {
               )}
             </>
           )}
-          {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress)) && (
+          {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll) && (
             <>
-              {tokensAtSale.map((tokenInfo, index) => {
+              {tokensAtSale.slice(0, viewOffset + viewLimit).map((tokenInfo, index) => {
                 const {
                   tokenId,
                 } = tokenInfo
@@ -393,7 +483,7 @@ const MarketCollection: NextPage = (props) => {
           )}
           {userTokensFetched && isSell && connectedAddress && (
             <>
-              {userTokens.map(( { tokenId } = tokenInfo, index) => {
+              {userTokens.slice(0, viewOffset + viewLimit).map(( { tokenId } = tokenInfo, index) => {
                 return (
                   <div key={index}>
                     <NftCard 
@@ -413,6 +503,15 @@ const MarketCollection: NextPage = (props) => {
             </>
           )}
         </div>
+        {showLoadMore && (
+          <div style={{textAlign: 'center', paddingTop: '2em'}}>
+            <Button
+              onClick={doLoadMore}
+            >
+              {`Load more`}
+            </Button>
+          </div>
+        )}
       </main>
       <Footer />
     </>

@@ -30,6 +30,11 @@ export const CURRENCIES = {
     name: "FTM",
     symbol: 'FTM',
     decimals: 18
+  },
+  ALV: {
+    name: 'ALV',
+    symbol: 'ALV',
+    decimals: 18
   }
 }
 
@@ -48,9 +53,23 @@ export const MULTICALL_CONTRACTS = {
   42161: '0x80C7DD17B01855a6D2347444a0FCC36136a314de',
   421611: '0xf27ee99622c3c9b264583dacb2cce056e194494f',
   250: '0x22D4cF72C45F8198CfbF4B568dBdB5A85e8DC0B5',
+  3797: '0x48d7ac38530697aDB91061B6D141C8c763edE565'
 }
 
 export const AVAILABLE_NETWORKS_INFO = [
+  {
+    slub: 'alv_mainnet',
+    chainName: 'AlveyChain',
+    chainId: '0xED5',
+    networkVersion: 3797,
+    rpcUrls: ['https://rpc2.alvey.io/rpc'],
+    blockExplorerUrls: ['https://alveyscan.com/'],
+    isTestnet: false,
+    nativeCurrency: CURRENCIES.ALV,
+    multicall: '0x48d7ac38530697aDB91061B6D141C8c763edE565',
+    storage: '0x87a6417F03E106A05698F18829bB3a40CBC54f61',
+    exStorage: '0x021a76444261B27d5734d25e55F5d4fCBbFD20Bc'
+  },
   {
     slug: 'bsc_testnet',
     chainName: 'Binance Smart Chain - Testnet',

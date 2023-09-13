@@ -1,3 +1,4 @@
+import PromiseChunksCall from "./PromiseChunksCall"
 
 const processValue = (val) => {
   if (val && val._isBigNumber) val = val.toString()
@@ -22,7 +23,13 @@ export const callMulticall = (options) => {
     target,
     encoder,
     calls,
-  } = options
+    chunkSize,
+    onFetching,
+  } = {
+    chunkSize: 500,
+    onFetching: (cursorPos, total) => {},
+    ...options
+  }
 
   return new Promise((resolve, reject) => {
     const ret = {}
@@ -38,7 +45,14 @@ export const callMulticall = (options) => {
         callData: encoder.encodeFunctionData(func, args)
       }
     })
-    multicall.methods.tryAggregate(false, mcCalls).call().then((answers) => {
+    PromiseChunksCall({
+      args: mcCalls,
+      chunkSize,
+      onFetching,
+      func: async (chunk) => {
+        return await multicall.methods.tryAggregate(false, chunk).call()
+      },
+    }).then((answers) => {
       answers.forEach((retData, index) => {
         if (retData.success) {
           let val = encoder.decodeFunctionResult(
@@ -64,7 +78,13 @@ export const callMulticallGroup = (options) => {
   const {
     multicall,
     calls,
-  } = options
+    chunkSize,
+    onFetching,
+  } = {
+    chunkSize: 500,
+    onFetching: (cursorPos, total) => {},
+    ...options
+  }
 
   return new Promise((resolve, reject) => {
     const ret = {}
@@ -83,7 +103,14 @@ export const callMulticallGroup = (options) => {
         callData: encoder.encodeFunctionData(func, args || [])
       }
     })
-    multicall.methods.tryAggregate(false, mcCalls).call().then((answers) => {
+    PromiseChunksCall({
+      args: mcCalls,
+      chunkSize,
+      onFetching,
+      func: async (chunk) => {
+        return await multicall.methods.tryAggregate(false, chunk).call()
+      },
+    }).then((answers) => {
       answers.forEach((retData, index) => {
         if (retData.success) {
           let val = calls[index].encoder.decodeFunctionResult(

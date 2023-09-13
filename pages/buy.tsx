@@ -22,6 +22,7 @@ import { CHAIN_INFO, ZERO_ADDRESS } from "/helpers/constants"
 import { toWei, fromWei } from "/helpers/wei"
 import BigNumber from "bignumber.js"
 
+import Button from "/components/market/Button"
 
 import Web3 from 'web3'
 import fetchMarketInfo from '/helpers/fetchMarketInfo'
@@ -302,6 +303,11 @@ const Market: NextPage = (props) => {
     }
   }, [ needRefreshCollections, marketInfo ])
 
+  const [ viewOffset, setViewOffset ] = useState(0)
+  const viewLimit = 15
+  const doLoadMore = () => {
+    setViewOffset(viewOffset+viewLimit)
+  }
   return (
   <>
     <style jsx>
@@ -350,7 +356,7 @@ const Market: NextPage = (props) => {
               <>
                 {!tokensAtSaleFetching && (
                   <>
-                    {tokensAtSale.map((tokenInfo, index) => {
+                    {tokensAtSale.slice(0, viewOffset + viewLimit).map((tokenInfo, index) => {
                       const {
                         tokenId,
                       } = tokenInfo
@@ -372,6 +378,7 @@ const Market: NextPage = (props) => {
                     })}
                   </>
                 )}
+                
               </>
             )}
             {viewType == VIEW_TYPE.COLLECTIONS && (
@@ -395,9 +402,18 @@ const Market: NextPage = (props) => {
               </>
             )}
             <article className="relative group overflow-hidden">
-              <div className="w-[335px] h-[275px] overflow-hidden"></div>
+              <div className="w-[335px] h-[1px] overflow-hidden"></div>
             </article>
           </section>
+          {viewType == VIEW_TYPE.ASSETS && (viewOffset + viewLimit) < tokensAtSale.length && (
+            <div style={{textAlign: 'center', width: '100%', paddingTop: '2em'}}>
+              <Button
+                onClick={doLoadMore}
+              >
+                {`Load more`}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       <Footer />
