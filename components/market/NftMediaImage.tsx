@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import  fetch from "node-fetch"
 import { ipfsUrl } from "/helpers/ipfsUrl"
 import { mediaCacheAdd, mediaCacheGet } from "/helpers/mediaCache"
+import { getAssets } from "/helpers/"
+
 
 export default function NftMediaImage(options) {
   const {
@@ -15,6 +17,22 @@ export default function NftMediaImage(options) {
   const [ jsonData, setJsonData ] = useState({})
   
   const [ jsonUrl, setJsonUrl ] = useState(false)
+  
+  const [ imageCache, setImageCache ] = useState(false)
+  const [ imageCached, setImageCached ] = useState(false)
+  
+  useEffect(() => {
+    if (jsonUrl) {
+      const cache = new Image()
+      
+      cache.onload = () => {
+        setImageCached(true)
+      }
+      cache.src = jsonUrl
+      setImageCache(cache)
+    }
+  }, [ jsonUrl ])
+
   useState(() => {
     if (url) {
       fetch(ipfsUrl(url))
@@ -71,8 +89,28 @@ export default function NftMediaImage(options) {
 
   return (
     <>
-      {isFetched && jsonData && jsonData.image && jsonUrl && (
+      {isFetched && jsonData && jsonData.image && jsonUrl && imageCached ? (
         <img src={jsonUrl} onLoad={onLoaded} loading="lazy" {...options} />
+      ) : (
+        <div
+          {...options}
+          style={{
+            background: '#000000',
+            position: 'relative',
+          }}
+        >
+          <img
+            src={getAssets('images/index-gallery-loader.svg', 'IndexGalleryLoader')} 
+            style={{
+              width: '50%',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              marginTop: '-25%',
+              marginLeft: '-25%',
+            }}
+          />
+        </div>
       )}
     </>
   )

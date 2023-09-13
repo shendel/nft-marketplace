@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import fetchMarketInfo from '/helpers/fetchMarketInfo'
 import Web3ObjectToArray from "/helpers/Web3ObjectToArray"
 import fetchManyNftContent from "/helpers/fetchManyNftContent"
-import { getAssets } from "/helpers/"
+import { getAssets, getLink } from "/helpers/"
 import NftMediaImage from "/components/market/NftMediaImage"
 
 export default function IndexGallery(options) {
@@ -20,7 +20,13 @@ export default function IndexGallery(options) {
         chainId,
         onlyTokens: true,
       }).then((info) => {
-        setMarketTokens(Web3ObjectToArray(info.tokensAtSale).slice(0,4))
+        setMarketTokens(
+          Web3ObjectToArray(info.tokensAtSale)
+            .sort((a, b) => {
+              return Number(a.utx) > Number(b.utx) ? -1 : 1
+            })
+            .slice(0,4)
+          )
       })
     }
   }, [chainId, marketplaceContract])
@@ -60,35 +66,13 @@ export default function IndexGallery(options) {
       })
     }
   }, [ marketTokens ])
-  const items = [
-    {
-      href: '#',
-      url: 'https://ipfs.io/ipfs/QmNQiyvtfvHV4oKQuwZfRhFjX9yoE64wuPWimckt3cvCWH/9.png',
-      title: 'item 1'
-    },
-    {
-      href: '#',
-      url: 'https://ipfs.io/ipfs/QmNQiyvtfvHV4oKQuwZfRhFjX9yoE64wuPWimckt3cvCWH/10.png',
-      title: 'item 2'
-    },
-    {
-      href: '#',
-      url: 'https://ipfs.io/ipfs/QmNQiyvtfvHV4oKQuwZfRhFjX9yoE64wuPWimckt3cvCWH/11.png',
-      title: 'item 3'
-    },
-    {
-      href: '#',
-      url: 'https://ipfs.io/ipfs/QmNQiyvtfvHV4oKQuwZfRhFjX9yoE64wuPWimckt3cvCWH/12.png',
-      title: 'item 4'
-    },
-  ]
   
   const [ activeItemIndex, setActiveItemIndex ] = useState(0)
   
   useEffect(() => {
     const intervalId = setInterval(() => {
       const newIndex = activeItemIndex+1
-      setActiveItemIndex((newIndex < items.length) ? newIndex : 0)
+      setActiveItemIndex((newIndex < marketTokens.length) ? newIndex : 0)
     }, 3000)
 
     return () => clearInterval(intervalId)
@@ -108,7 +92,7 @@ export default function IndexGallery(options) {
                 display: (index == activeItemIndex) ? 'block' : 'none'
               }}>
                 {(tokensUrls[marketTokens[index].collection] && tokensUrls[marketTokens[index].collection][marketTokens[index].tokenId]) ? (
-                  <a href={items[index].href}>
+                  <a href={getLink(`asset`, `${marketTokens[index].collection}/${marketTokens[index].tokenId}`)}>
                     <NftMediaImage
                       url={tokensUrls[marketTokens[index].collection][marketTokens[index].tokenId]}
                       className="w-[290px] hover:ring xl:hover:ring-4 ring-moon-orange transition-all duration-300 h-[362px] lg:h-[443.38px] xl:h-[499.58px] 2xl:h-[564px]  object-cover lg:w-[355px] xl:w-[400px] 2xl:w-[536px]  rounded-tl-[99px] rounded-br-[99px]"
@@ -117,7 +101,7 @@ export default function IndexGallery(options) {
                     />
                   </a>
                 ) : (
-                  <a href={items[index].href}>
+                  <a href={getLink(`asset`, `${marketTokens[index].collection}/${marketTokens[index].tokenId}`)}>
                     <div className="w-[290px] hover:ring xl:hover:ring-4 ring-moon-orange transition-all duration-300 h-[362px] lg:h-[443.38px] xl:h-[499.58px] 2xl:h-[564px]  object-cover lg:w-[355px] xl:w-[400px] 2xl:w-[536px]  rounded-tl-[99px] rounded-br-[99px]"
                       style={{
                         background: '#000000',
@@ -142,7 +126,7 @@ export default function IndexGallery(options) {
             )
           })}
           <div className="mt-8 flex gap-5 lg:ml-12 lg:mt-6">
-            {items.map((item, index) => {
+            {marketTokens.map((tokenInfo, index) => {
               return (
                 <button key={index} className={`${(index == activeItemIndex) ? 'bg-moon-secondary' : 'bg-white bg-opacity-20'} transition-all duration-150 w-11 lg:w-8 2xl:w-11 h-1 xl:h-[6px] rounded`}
                   onClick={() => { doSetIndex(index) }}
