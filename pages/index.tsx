@@ -14,7 +14,18 @@ import IndexGallery from "/components/market/IndexGallery"
 
 
 const Home: NextPage = (props) => {
-  const router = useRouter();
+  const {
+    storageData,
+    storageData: {
+      isBaseConfigReady,
+    },
+    isOwner,
+  } = props
+  const router = useRouter()
+  
+  const [ chainId, setChainId ] = useState(storageData?.marketplaceChainId)
+  const [ marketplaceContract, setMarketplaceContract ] = useState(storageData?.marketplaceContract)
+
   
 
   return (
@@ -26,9 +37,9 @@ const Home: NextPage = (props) => {
         <Header />
         <main className="flex flex-col items-center px-6 md:px-10">
           <div className="mt-10 flex flex-col items-center pb-12 md:flex-row-reverse md:py-10 lg:pt-12 md:gap-12 xl:gap-28 2xl:gap-40">
-            <IndexGallery />
+            <IndexGallery chainId={chainId} marketplaceContract={marketplaceContract} />
             <div className="md:max-w-[500px] xl:max-w-[600px] 2xl:max-w-[700px] relative mt-16 text-center z-10 md:text-left flex flex-col items-center md:mt-2 md:items-start lg:mt-10">
-              <div className="absolute overflow-hidden hidden lg:block -z-50 lg:left-[calc(-90%-30rem)] xl:left-[calc(-40%-30rem)] lg:top-[calc(50%-30rem)] 2xl:left-[calc(-5%-30rem)] 2xl:top-[calc(50%-30rem)] transform-gpu blur-[85px] " ariaHidden="true">
+              <div className="absolute overflow-hidden hidden lg:block -z-50 lg:left-[calc(-90%-30rem)] xl:left-[calc(-40%-30rem)] lg:top-[calc(50%-30rem)] 2xl:left-[calc(-5%-30rem)] 2xl:top-[calc(50%-30rem)] transform-gpu blur-[85px] " aria-hidden="true">
                 <div 
                   className="relative aspect-[1400/678] rotate-[30deg] bg-gradient-to-tr from-moon-secondary to-orange-600 opacity-[0.15] w-[82.1875rem]"
                   style={{
