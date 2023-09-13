@@ -6,6 +6,7 @@ import { getLink } from "/helpers/getLink"
 import { useRouter } from "next/router"
 import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 import { fromWei } from "/helpers/wei"
+import ImgPrecache from "/components/market/ImgPrecache"
 
 export default function NftCard(props) {
   const router = useRouter()
@@ -155,7 +156,8 @@ export default function NftCard(props) {
                             position: 'absolute',
                           }}
                         ></div>
-                        <img
+                        <ImgPrecache
+                          noLoader={true}
                           className="object-cover object-center group-hover:scale-110 transition-all duration-200"
                           style={{
                             objectFit: 'contain',

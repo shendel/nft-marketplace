@@ -25,6 +25,7 @@ import fetchUserNfts from "/helpers/fetchUserNfts"
 import { getLink } from "/helpers/getLink"
 import useUrlHash from "/helpers/useUrlHash"
 import Button from "/components/market/Button"
+import ImgPrecache from "/components/market/ImgPrecache"
 
 
 const MarketCollection: NextPage = (props) => {
@@ -317,7 +318,7 @@ const MarketCollection: NextPage = (props) => {
           <div className="flex flex-col items-center md:flex-row md:items-start md:gap-12 lg:gap-16 xl:gap-20">
             <div>
               {collectionInfo.image && (
-                <img
+                <ImgPrecache
                   style={{
                     objectFit: 'contain',
                     width: '300px',

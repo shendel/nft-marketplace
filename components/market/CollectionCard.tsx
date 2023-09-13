@@ -1,4 +1,5 @@
 import { getLink } from "/helpers/getLink"
+import ImgPrecache from "/components/market/ImgPrecache"
 
 export default function CollectionCard(options) {
   const {
@@ -65,7 +66,8 @@ export default function CollectionCard(options) {
                   position: 'absolute',
                 }}
               ></div>
-              <img
+              <ImgPrecache
+                noLoader={true}
                 src={info.image}
                 alt={info && info.name ? `${info.name} thumbnail` : `...`}
                 className="z-10 w-[300px] h-[235px] object-cover rounded-t-[6px] rounded-b-[15px] group-hover:ring ring-indigo-200"

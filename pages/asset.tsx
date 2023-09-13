@@ -29,7 +29,7 @@ import useWeb3 from "/helpers/useWeb3"
 import Button from "/components/market/Button"
 import SellNftForm from "/components/market/SellNftForm"
 import DeListingButton from "/components/market/DeListingButton"
-
+import ImgPrecache from "/components/market/ImgPrecache"
 
 const MarketAsset: NextPage = (props) => {
   const {
@@ -236,7 +236,8 @@ const MarketAsset: NextPage = (props) => {
           <div className="w-full flex flex-col gap-8 mt-4 md:mt-32 tablet:flex-row pb-32 tablet:pb-0">
             <div className="flex flex-col flex-1 w-full mt-8 tablet:mt-0">
               {nftMetadataJson && nftMetadataJson.image && (
-                <img 
+                <img
+                  load="lazy"
                   style={{
                     objectFit: `contain`,
                     width: `300px`,
@@ -311,7 +312,7 @@ const MarketAsset: NextPage = (props) => {
                 <a href={getLink(`collection`, collectionAddress)}>
                   {/* Collection image */}
                   {collectionInfo && collectionInfo.image && (
-                    <img
+                    <ImgPrecache
                       className="!w-[36px] !h-[36px] rounded-lg mr-4 ml-3 mb-2"
                       src={ipfsUrl(collectionInfo.image)}
                       style={{
