@@ -68,18 +68,22 @@ const setupWeb3 = () => new Promise((resolve, reject) => {
       return netInfo.networkVersion == activeChainId
     })
 
+    console.log('>> activeNetworkExists', activeNetworkExists)
     if (activeNetworkExists.length) {
       const activeNetwork = activeNetworkExists[0]
 
+      
       // @ts-ignore
       const web3 = new Web3(window.ethereum || Web3.givenProvider || new Web3.providers.HttpProvider(activeNetwork.rpcUrls))
 
+      console.log(web3)
       if (web3) {
         resolve({
           activeChainId,
           web3
         })
       } else {
+        console.log('>>> web3')
         reject('FAIL_SETUP_WEB3')
       }
     } else {
@@ -107,7 +111,9 @@ const doConnectWithMetamask = async (options) => {
   if (onBeforeConnect) onBeforeConnect()
   try {
     const enabledResult = await window.ethereum.enable()
+    console.log(' >>> enabledResult', enabledResult)
     setupWeb3().then(async (answer) => {
+      
       const {
         activeChainId, web3
       } = answer

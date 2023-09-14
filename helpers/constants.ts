@@ -129,7 +129,7 @@ export const AVAILABLE_NETWORKS_INFO = [
     chainName: 'Ethereum - Testnet (Goerli)',
     chainId: '0x5',
     networkVersion: 5,
-    rpcUrls: ['https://goerli.infura.io/v3/5ffc47f65c4042ce847ef66a3fa70d4c'],
+    rpcUrls: ['https://eth-goerli.g.alchemy.com/v2/wNvkA78LYEG7fb5S5z4nJIfB22dAcvuH'],//['https://goerli.infura.io/v3/5ffc47f65c4042ce847ef66a3fa70d4c'],
     blockExplorerUrls: ['https://goerli.etherscan.io'],
     isTestnet: true,
     nativeCurrency: CURRENCIES.ETH

@@ -12,7 +12,11 @@ const fetchTokensListInfo = (options) => {
     erc20list,
     chainId,
     withAllowance,
-  } = options
+    balanceFor
+  } = {
+    balanceFor: false,
+    ...options
+  }
 
   const {
     allowanceFrom,
@@ -49,6 +53,15 @@ const fetchTokensListInfo = (options) => {
               encoder: abiI,
               target: erc20address
             },
+            ...(balanceFor ? [
+              {
+                group: erc20address,
+                func: `balanceOf`,
+                args: [ balanceFor ],
+                encoder: abiI,
+                target: erc20address,
+              }
+            ] : []),
             ...(withAllowance ? [
               {
                 group: erc20address,

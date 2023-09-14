@@ -2,44 +2,95 @@ import FaIcon from "/components/FaIcon"
 import { useEffect, useState } from "react"
 import { getAssets } from "/helpers/"
 import { CopyToClipboard } from 'react-copy-to-clipboard'
-import useWeb3 from '/helpers/useWeb3'
-import useStorage from "/storage/"
-
+import fetchMarketInfo from "/helpers/fetchMarketInfo"
+import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
+import Web3ObjectToArray from "/helpers/Web3ObjectToArray"
+import { fromWei } from "/helpers/wei"
+import fetchBalance from "/helpers/fetchBalance"
+import { CHAIN_INFO } from "/helpers/constants"
 
 export default function WalletModal(options) {
   const {
     onClose,
+    address,
+    activeChainId,
+    marketplaceChainId,
+    marketplaceContract,
+    isSwitchAccount,
+    switchAccount,
+    isSwitchChain,
+    switchChainId,
+    disconnectWallet,
   } = {
     onClose: () => {},
     ...options
   }
 
-  const {
-    storageData,
-  } = useStorage()
+  const [ allowedTokens, setAllowedTokens ] = useState(false)
+  const [ allowedTokensInfo, setAllowedTokensInfo ] = useState([])
+  const [ allowedTokensInfoFetched, setAllowedTokensInfoFetched ] = useState(false)
+  const [ allowedTokensInfoFetching, setAllowedTokensInfoFetching ] = useState(false)
   
-  const {
-    isWalletConnecting,
-    isConnected,
-    address,
-    activeChainId,
-    activeWeb3,
-    connectWeb3,
-    switchChainId,
-    setChainId,
-    isSwitchChain,
-    switchAccount,
-    isSwitchAccount,
-    disconnectWallet
-  } = useWeb3()
+  const [ balance, setBalance ] = useState(false)
+  const [ isBalanceFetched, setIsBalanceFetched ] = useState(false)
+  const [ isBalanceFetching, setIsBalanceFetching ] = useState(false)
   
   useEffect(() => {
-    if (storageData && storageData.marketplaceChainId) {
-      console.log('>>> WalletModal setChainId', storageData.marketplaceChainId)
-      setChainId(storageData.marketplaceChainId)
+    if (marketplaceChainId && marketplaceContract && `${activeChainId}` == `${marketplaceChainId}`) {
+      fetchMarketInfo({
+        address: marketplaceContract,
+        chainId: marketplaceChainId,
+        onlyInfo: true
+      }).then((info) => {
+        setAllowedTokens(Web3ObjectToArray(info.allowedERC20))
+
+      }).catch((err) => {
+        console.log('WalletInfo - fail fetch market info', err)
+      })
     }
-  }, [ storageData ])
+  }, [ marketplaceChainId, marketplaceContract, activeChainId ])
   
+  useEffect(() => {
+    if (allowedTokens && address &&  `${activeChainId}` == `${marketplaceChainId}`) {
+      if (allowedTokens.length > 0) {
+        setAllowedTokensInfoFetching(true)
+        fetchTokensListInfo({
+          erc20list: allowedTokens,
+          chainId: marketplaceChainId,
+          balanceFor: address
+        }).then((info) => {
+          setAllowedTokensInfo(info)
+          setAllowedTokensInfoFetching(false)
+          setAllowedTokensInfoFetched(true)
+          console.log('WalletInfo - tokens', info)
+        }).catch((err) => {
+          console.log('WalletInfo - fail fetch tokens info', err)
+        })
+      } else {
+        setAllowedTokensInfoFetching(false)
+        setAllowedTokensInfoFetched(true)
+      }
+    }
+  }, [ allowedTokens, address, activeChainId])
+  
+  useEffect(() => {
+    if (address && `${activeChainId}` == `${marketplaceChainId}`) {
+      setIsBalanceFetched(false)
+      setIsBalanceFetching(true)
+      fetchBalance({
+        address,
+        chainId: marketplaceChainId
+      }).then((bal) => {
+        setBalance(bal)
+        setIsBalanceFetched(true)
+        setIsBalanceFetching(false)
+        console.log('WalletInfo - balance', bal)
+      }).catch((err) => {
+        setIsBalanceFetching(false)
+        console.log('WalletInfo - fail fetch user balance', err)
+      })
+    }
+  }, [ address, activeChainId]) 
   const [ isCopyAddress, setIsCopyAddress ] = useState(false)
   
   const doCopyAddress = () => {
@@ -47,6 +98,9 @@ export default function WalletModal(options) {
     setTimeout(() => { setIsCopyAddress(false) }, 3000)
   }
 
+  const chainInfo = CHAIN_INFO(marketplaceChainId)
+  console.log('>> chainInfo', chainInfo)
+  console.log('>>> SHOW', (isBalanceFetched || allowedTokensInfoFetched) )
   return (
     <>
       <style>
@@ -70,7 +124,7 @@ export default function WalletModal(options) {
             background: #161618;
             border: 1px solid #323232;
             border-radius: 0.4em;
-            min-width: 300px;
+            min-width: 350px;
           }
           @media (max-width:800px) {
             DIV.walletModal {
@@ -199,7 +253,7 @@ export default function WalletModal(options) {
         `}
       </style>
       <div className="walletModal-bg" onClick={onClose}></div>
-      {!address || !storageData ? (
+      {!address ? (
         <div className="walletModal">
           <img className="walletModalLoading" src={getAssets('images/loader.svg')} />
         </div>
@@ -223,16 +277,15 @@ export default function WalletModal(options) {
             </a>
             */}
           </div>
-          {`${activeChainId}` !== `${storageData.marketplaceChainId}` ? (
+          {`${activeChainId}` !== `${marketplaceChainId}` ? (
             <>
-              {/*
               <label>
                 <span>Balances - Wrong network</span>
               </label>
-              */}
+              {/*
               <label>
                 <span>Wrong network</span>
-              </label>
+              </label>*/}
               <button onClick={() => { switchChainId() }}>
                 {isSwitchChain && (<img src={getAssets('images/loader.svg')} />)}
                 {!isSwitchChain && (<FaIcon icon="share-alt" />)}
@@ -241,29 +294,34 @@ export default function WalletModal(options) {
             </>
           ) : (
             <>
-              {/*
-              <label className="isLoading">
+              <label className={(isBalanceFetching || allowedTokensInfoFetching) ? `isLoading` : ``}>
                 <span>Balances</span>
                 <img src={getAssets('images/loader.svg')} />
               </label>
-              <ul>
-                <li>
-                  <em></em>
-                  <span>ETH</span>
-                  <span>0.001</span>
-                </li>
-                <li>
-                  <em></em>
-                  <span>ETH</span>
-                  <span>0.001</span>
-                </li>
-                <li>
-                  <em></em>
-                  <span>ETH</span>
-                  <span>0.001</span>
-                </li>
-              </ul>
-              */}
+              {(isBalanceFetched || allowedTokensInfoFetched) && (
+                <ul>
+                  {isBalanceFetched && (
+                    <li>
+                      {/*<em></em>*/}
+                      <span>{chainInfo.nativeCurrency.symbol}</span>
+                      <span>{Number(fromWei(balance, chainInfo.nativeCurrency.decimals)).toFixed(6)}</span>
+                    </li>
+                  )}
+                  {allowedTokensInfoFetched && (
+                    <>
+                      {Object.keys(allowedTokensInfo).map((tokenAddress) => {
+                        const token = allowedTokensInfo[tokenAddress]
+                        return (
+                          <li>
+                            <span>{token.symbol}</span>
+                            <span>{Number(fromWei(token.balanceOf, token.decimals)).toFixed(6)}</span>
+                          </li>
+                        )
+                      })}
+                    </>
+                  )}
+                </ul>
+              )}
             </>
           )}
           <div style={{paddingTop: '1em'}}>

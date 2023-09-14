@@ -18,25 +18,29 @@ const useWeb3 = (_chainId) => {
   const [ isSwitchChain, setIsSwitchChain ] = useState(false)
   
   const initOnWeb3Ready = async () => {
+    console.log('>>> initOnWeb3Ready', activeChainId, activeWeb3)
     if (activeWeb3 && chainId && (`${activeChainId}` == `${chainId}`)) {
       activeWeb3.eth.getAccounts().then((accounts) => {
-        setAddress(accounts[0] || false)
+        //setAddress(accounts[0] || false)
       }).catch((err) => {
         console.log('>>> initOnWeb3Ready', err)
       })
     } else {
       const _isConnected = await isMetamaskConnected()
       const _lsConnected = window.localStorage.getItem('WEB3_CONNECTED')
-      if (_isConnected && _lsConnected) {
+      if (_isConnected) {// && _lsConnected) {
+        console.log('>> do connectWeb3')
         connectWeb3()
       } else {
         setAddress(false)
       }
     }
   }
+
   useEffect(() => {
     initOnWeb3Ready()
   }, [ activeWeb3 ])
+
   
   const onConnect = async () => {
     initOnWeb3Ready()
@@ -60,9 +64,8 @@ const useWeb3 = (_chainId) => {
         window.localStorage.setItem('WEB3_CONNECTED', true)
         setIsWalletConnecting(false)
         setActiveWeb3((`${cId}` == `${chainId}`) ? web3 : false)
-        if (!web3) {
-          setAddress(await getConnectedAddress())
-        }
+        setAddress(await getConnectedAddress())
+        //initOnWeb3Ready()
       },
       onError: (err) => {
         setIsWalletConnecting(false)
@@ -76,9 +79,10 @@ const useWeb3 = (_chainId) => {
   
   const isConnected = () => {
     const _lsConnected = window.localStorage.getItem('WEB3_CONNECTED')
-    return address !== false && _lsConnected
+    return address !== false// && _lsConnected
   }
   
+
   const switchChainId = (newChainId) => {
     setIsSwitchChain(true)
     switchOrAddChain(newChainId || chainId).then((isSwitched) => {

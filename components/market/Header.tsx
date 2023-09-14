@@ -40,14 +40,21 @@ export default function Header(props) {
     activeWeb3,
     connectWeb3,
     switchChainId,
+    isSwitchChain,
     setChainId,
+    chainId,
+    isSwitchAccount,
+    switchAccount,
+    disconnectWallet
   } = useWeb3()
   
   useEffect(() => {
+    console.log('>>> HEADER address', address)
     if (!address) {
       setIsMenuOpened(false)
     }
   }, [ address ])
+  
   useEffect(() => {
     if (storageData && storageData.marketplaceChainId) {
       console.log('>>> HEADER setChainId', storageData.marketplaceChainId)
@@ -280,7 +287,18 @@ export default function Header(props) {
         </nav>
       </div>
       {address && isMenuOpened && (
-        <WalletModal onClose={onCloseMenu} />
+        <WalletModal
+          onClose={onCloseMenu}
+          address={address}
+          activeChainId={activeChainId}
+          marketplaceChainId={storageData?.marketplaceChainId}
+          marketplaceContract={storageData?.marketplaceContract}
+          isSwitchAccount={isSwitchAccount}
+          switchAccount={switchAccount}
+          isSwitchChain={isSwitchChain}
+          switchChainId={switchChainId}
+          disconnectWallet={disconnectWallet}
+          />
       )}
     </>
   )
