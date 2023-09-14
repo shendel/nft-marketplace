@@ -34,7 +34,7 @@ const fetchMarketTokenInfo = (options) => {
           target: marketAddress,
           encoder: abiI,
           calls: {
-            tokensAtSale:     { func: 'getTokensAtSale' },
+            tokensAtSale:     { func: 'getTokensAtSale', args: [0, 0] },
             allowedERC20:     { func: 'getAllowedERC20' },
           }
         }).then((mcAnswer) => {

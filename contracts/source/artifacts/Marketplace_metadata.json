@@ -379,6 +379,16 @@
 						"internalType": "address",
 						"name": "collection",
 						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "limit",
+						"type": "uint256"
 					}
 				],
 				"name": "getCollectionTokensAtSale",
@@ -482,7 +492,18 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "limit",
+						"type": "uint256"
+					}
+				],
 				"name": "getMyTokensAtSale",
 				"outputs": [
 					{
@@ -527,7 +548,18 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "limit",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "offset",
+						"type": "uint256"
+					}
+				],
 				"name": "getTokensAtSale",
 				"outputs": [
 					{
@@ -658,6 +690,16 @@
 						"internalType": "address",
 						"name": "seller",
 						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "limit",
+						"type": "uint256"
 					}
 				],
 				"name": "getUserTokensAtSale",
@@ -1000,11 +1042,11 @@
 	},
 	"sources": {
 		"source/Marketplace.sol": {
-			"keccak256": "0x9020418728a10c0314fe41f3dcf9fc2f95582847c47c10105065f2a55111056d",
+			"keccak256": "0x9d89c5c914bb8a096d66a1a125ba8a64049890e22f80868b66b5061ba5728641",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://1585065e65362086d1775e5479687df10282863b98af989473e6fcf56161376e",
-				"dweb:/ipfs/QmQYJw4o145BCMoQ3UdEo1g33HTnv94sGRruqX9X8tNXzK"
+				"bzz-raw://645fceb2bc0d1420bb8307b7d5fe0c39d7cdf3c8b658747b0128ef1901d084e3",
+				"dweb:/ipfs/Qmd3Evvi4YGubp6sTPn7zvVgQRt9zFVce7Wgho95kiZgYP"
 			]
 		}
 	},

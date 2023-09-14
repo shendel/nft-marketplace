@@ -1578,10 +1578,10 @@ contract Marketplace is Ownable, Pausable {
         _tradeFee = _newTradeFee;
     }
 
-    function getMyTokensAtSale() public view returns(SelledNFT[] memory) {
-        return getUserTokensAtSale(msg.sender);
+    function getMyTokensAtSale(uint256 offset, uint256 limit) public view returns(SelledNFT[] memory) {
+        return getUserTokensAtSale(msg.sender, offset, limit);
     }
-    function getUserTokensAtSale(address seller)
+    function getUserTokensAtSale(address seller, uint256 offset, uint256 limit)
         public view
         returns (SelledNFT[] memory ret)
     {
@@ -1601,10 +1601,10 @@ contract Marketplace is Ownable, Pausable {
     function getTokensAtSaleCount() public view returns (uint256) {
         return _marketTokens.length;
     }
-    function getTokensAtSale() public view returns (SelledNFT[] memory) {
+    function getTokensAtSale(uint256 limit, uint256 offset) public view returns (SelledNFT[] memory) {
         return _marketTokens;
     }
-    function getCollectionTokensAtSale(address collection) public view returns (SelledNFT[] memory ret) {
+    function getCollectionTokensAtSale(address collection, uint256 offset, uint256 limit) public view returns (SelledNFT[] memory ret) {
         if (_collectionTokensCount[collection] > 0) {
             ret = new SelledNFT[](_collectionTokensCount[collection]);
             uint256 counter = 0;

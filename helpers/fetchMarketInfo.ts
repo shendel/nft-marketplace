@@ -45,11 +45,11 @@ const fetchMarketInfo = (options) => {
           calls: 
             (userAddress)
               ? {
-                tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress ] }
+                tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress, 0, 0] }
               } : (onlyTokens)
                 ? {
                   tokensAtSaleCount:        { func: 'getTokensAtSaleCount' },
-                  tokensAtSale:             { func: 'getTokensAtSale' },
+                  tokensAtSale:             { func: 'getTokensAtSale', args: [ 0, 0 ]},
                 } : {
                   isMPContract:             { func: 'isMarketPlaceContract' },
                   owner:                    { func: 'owner' },
@@ -65,12 +65,12 @@ const fetchMarketInfo = (options) => {
                   ...((!onlyInfo && !collectionAddress)
                     ? {
                       tokensAtSaleCount:    { func: 'getTokensAtSaleCount' },
-                      tokensAtSale:         { func: 'getTokensAtSale' },
+                      tokensAtSale:         { func: 'getTokensAtSale', args: [0, 0] },
                     } : {}
                   ),
                   ...((collectionAddress)
                     ? {
-                      tokensAtSale:         { func: 'getCollectionTokensAtSale', args: [ collectionAddress ] },
+                      tokensAtSale:         { func: 'getCollectionTokensAtSale', args: [ collectionAddress, 0, 0 ] },
                     } : {}
                   ),
                   allowedERC20:             { func: 'getAllowedERC20' },
