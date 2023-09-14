@@ -216,9 +216,32 @@ console.log(storageData)
         </style>
       </Head>
       {(storageIsLoading || (storageData === null)) ? (
-        <div className={styles.loadingHolder}>
-          <span>Loading...</span>
-        </div>
+        <>
+          <style jsx>
+            {`
+              .loader {
+                position: absolute;
+                left: 0px;
+                top: 0px;
+                bottom: 0px;
+                right: 0px;
+                background: #090013;
+              }
+              .loader IMG {
+                display: block;
+                width: 6em;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                margin-top: -3em;
+                margin-left: -3em;
+              }
+            `}
+          </style>
+          <div className="loader">
+            <img src={getAssets('images/loader.svg', 'loader')} />
+          </div>
+        </>
       ) : (
         <>
           {!storageIsLoading && storageData && !storageData.isInstalled && !isSettingsPage ? (

@@ -52,6 +52,7 @@ export default function WalletModal(options) {
   
   useEffect(() => {
     if (allowedTokens && address &&  `${activeChainId}` == `${marketplaceChainId}`) {
+      setAllowedTokensInfoFetched(false)
       if (allowedTokens.length > 0) {
         setAllowedTokensInfoFetching(true)
         fetchTokensListInfo({

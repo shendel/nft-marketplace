@@ -24,7 +24,7 @@ export default function NftMediaImage(options) {
   useEffect(() => {
     if (jsonUrl) {
       const cache = new Image()
-      
+
       cache.onload = () => {
         setImageCached(true)
       }

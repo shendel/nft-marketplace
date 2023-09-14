@@ -23,6 +23,8 @@ import fetchNFTCollectionAllTokens from '/helpers/fetchNFTCollectionAllTokens'
 import useWeb3 from "/helpers/useWeb3"
 import fetchUserNfts from "/helpers/fetchUserNfts"
 import { getLink } from "/helpers/getLink"
+import { getAssets } from "/helpers/getAssets"
+
 import useUrlHash from "/helpers/useUrlHash"
 import Button from "/components/market/Button"
 import ImgPrecache from "/components/market/ImgPrecache"
@@ -233,11 +235,13 @@ const MarketCollection: NextPage = (props) => {
   
   const [ userTokens, setUserTokens ] = useState([])
   const [ userTokensFetched, setUserTokensFetched ] = useState(false)
+  const [ userTokensFetching, setUserTokensFetching ] = useState(false)
   
   
   useEffect(() => {
     if (chainId && collectionAddress && connectedAddress && collectionInfo) {
       setUserTokensFetched(false)
+      setUserTokensFetching(true)
       fetchUserNfts({
         chainId,
         walletAddress: connectedAddress,
@@ -245,6 +249,7 @@ const MarketCollection: NextPage = (props) => {
       }).then((answer) => {
         setUserTokens(answer)
         setUserTokensFetched(true)
+        setUserTokensFetching(false)
         
         setTokensUrls((newTokenUrls) => {
           Object.keys(answer).forEach((key) => {
@@ -288,11 +293,29 @@ const MarketCollection: NextPage = (props) => {
   
   const renderLoader = (title) => {
     return (
-      <div style={{paddingTop: '2em', paddingBottom: '2em' }}>
-        <p className="collectionLoading font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100">
-          {title}
-        </p>
-      </div>
+      <>
+        <style jsx>
+          {`
+            .loader {
+              padding-top: 2em;
+              padding-boolean: 2em;
+              text-align: center;
+            }
+            .loader IMG {
+              display: block;
+              margin: 0 auto;
+              width: 6em;
+            }
+            .loader STRONG {
+              display: block;
+            }
+          `}
+        </style>
+        <div className="loader">
+          <img src={getAssets(`images/loader.svg`, 'loader')} />
+          <strong>{title}</strong>
+        </div>
+      </>
     )
   }
   
@@ -391,21 +414,30 @@ const MarketCollection: NextPage = (props) => {
           </div>
         )}
         {isAll && (
-          <>{renderSubHeader(`All NFTs from this collection`)}</>
+          <>
+            {renderSubHeader(`All NFTs from this collection`)}
+            {allTokensFetching && renderLoader(`Fetching ${(allTokensFetchTotal > 0) ? Math.round(allTokensFetchCurrent/allTokensFetchTotal*100) : 0}%`)}
+          </>
         )}
         {isMy && connectedAddress && (
-          <>{renderSubHeader(`Your listed NFTs from this collection`)}</>
+          <>
+            {renderSubHeader(`Your listed NFTs from this collection`)}
+            {tokensAtSaleFetching && renderLoader(`Fetching`)}
+          </>
         )}
-        {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll) && (
-          <>{renderSubHeader(`NFTs listed at Marketplace`)}</>
+        {((!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll) && (
+          <>
+            {renderSubHeader(`NFTs listed at Marketplace`)}
+            {tokensAtSaleFetching && renderLoader(`Fetching`)}
+          </>
         )}
-        {userTokensFetched && isSell && connectedAddress && (
-          <>{renderSubHeader(`Your tokens from this collection, not listed for sale.`)}</>
+        {isSell && connectedAddress && (
+          <>
+            {renderSubHeader(`Your not listed NFTs`)}
+            {userTokensFetching && renderLoader(`Fetching`)}
+          </>
         )}
         
-        {isAll && allTokensFetching  && (
-          <>{renderLoader(`Fetching NFTs info ${(allTokensFetchTotal > 0) ? Math.round(allTokensFetchCurrent/allTokensFetchTotal*100) : 0}%`)}</>
-        )}
         <div className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
           {isAll && (
             <>

@@ -14,7 +14,7 @@ export default function ImgPrecache(options) {
   useEffect(() => {
     if (src) {
       const cache = new Image()
-      
+
       cache.onload = () => {
         setImageCached(true)
       }
