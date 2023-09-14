@@ -236,13 +236,18 @@ const MarketAsset: NextPage = (props) => {
           <div className="w-full flex flex-col gap-8 mt-4 md:mt-32 tablet:flex-row pb-32 tablet:pb-0">
             <div className="flex flex-col flex-1 w-full mt-8 tablet:mt-0">
               {nftMetadataJson && nftMetadataJson.image && (
-                <img
+                <ImgPrecache
                   load="lazy"
                   style={{
                     objectFit: `contain`,
                     width: `300px`,
                     height: `300px`,
                   }}
+                  loadStyle={{
+                    width: `300px`,
+                    height: `300px`,
+                  }}
+                  loadTitle="Loading NFT image:"
                   className="!w-full !h-full bg-white bg-opacity-[0.04] rounded-2xl"
                   alt={nftMetadataJson.name || ``}
                   src={nftMetadataJson.image}

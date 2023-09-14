@@ -44,6 +44,7 @@ export default function ImgPrecache(options) {
       (key != 'noLoader')
       && (key != 'loadClass')
       && (key != 'loadStyle')
+      && (key != 'loadTitle')
     ) _cleanOptions[key] = options[key]
   })
 
@@ -67,6 +68,7 @@ export default function ImgPrecache(options) {
                   display: 'block'
                 }}
               >
+                {options.loadTitle && (<>{options.loadTitle}{` `}</>)}
                 {progressLoad}{`%`}
               </strong>
             </div>
