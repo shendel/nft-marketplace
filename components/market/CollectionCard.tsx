@@ -67,7 +67,6 @@ export default function CollectionCard(options) {
                 }}
               ></div>
               <ImgPrecache
-                noLoader={true}
                 src={info.image}
                 alt={info && info.name ? `${info.name} thumbnail` : `...`}
                 className="z-10 w-[300px] h-[235px] object-cover rounded-t-[6px] rounded-b-[15px] group-hover:ring ring-indigo-200"
@@ -76,6 +75,10 @@ export default function CollectionCard(options) {
                   width: '275px',
                   height: '275px',
                   position: 'relative'
+                }}
+                loadStyle={{
+                  width: '275px',
+                  height: '270px',
                 }}
               />
             </div>
