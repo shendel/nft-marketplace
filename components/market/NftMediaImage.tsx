@@ -21,10 +21,24 @@ export default function NftMediaImage(options) {
   const [ imageCache, setImageCache ] = useState(false)
   const [ imageCached, setImageCached ] = useState(false)
   
+  const [ progressStarted, setProgressStarted ] = useState(false)
+  const [ loadProgress, setLoadProgress ] = useState(0)
+  const bgLoadImage = (src) => {
+    const xmlHTTP = new XMLHttpRequest()
+    xmlHTTP.open('GET',  src, true)
+    xmlHTTP.responseType = 'arraybuffer'
+    xmlHTTP.onload = (e) => {}
+    xmlHTTP.onprogress = function(e) {
+      setLoadProgress(Math.round((e.loaded / e.total) * 100))
+    }
+    xmlHTTP.send()
+    setProgressStarted(true)
+  }
+  
   useEffect(() => {
     if (jsonUrl) {
       const cache = new Image()
-
+      bgLoadImage(jsonUrl)
       cache.onload = () => {
         setImageCached(true)
       }
@@ -97,6 +111,9 @@ export default function NftMediaImage(options) {
           style={{
             background: '#000000',
             position: 'relative',
+            display: 'flex',
+            textAlign: 'center',
+            alignItems: 'center',
           }}
         >
           <img
@@ -110,6 +127,15 @@ export default function NftMediaImage(options) {
               marginLeft: '-25%',
             }}
           />
+          {progressStarted && (
+            <strong
+              style={{
+                width: '100%'
+              }}
+            >
+              {loadProgress}{`%`}
+            </strong>
+          )}
         </div>
       )}
     </>
