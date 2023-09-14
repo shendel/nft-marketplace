@@ -23,16 +23,19 @@ export default function ImgPrecache(options) {
     }
   }, [ src ])
 
-
+  const _cleanOptions = {}
+  Object.keys(options).forEach((key) => {
+    if (key != 'noLoader') _cleanOptions[key] = options[key]
+  })
   return (
     <>
       {imageCached ? (
-        <img loading="lazy" {...options} />
+        <img loading="lazy" {..._cleanOptions} />
       ) : (
         <>
           {!noLoader && (
             <div
-              {...options}
+              {..._cleanOptions}
               style={{
                 background: '#000000',
                 position: 'relative',

@@ -16,6 +16,12 @@ import NotifyHolder from "../components/NotifyHolder"
 import StorageStyles from "../components/StorageStyles"
 import { useRef } from "react"
 
+import { getAssets } from "/helpers/"
+
+
+const fontGoodTimes = getAssets('fonts/goodtimes.otf', 'fontGoodTimes')
+const fontRobotoMono = getAssets('fonts/RobotoMono.ttf', 'fontRobotoMono')
+
 let confirmWindowOnConfirm = () => {}
 let confirmWindowOnCancel = () => {}
 const defaultConfirmWindowLabels = {
@@ -196,6 +202,16 @@ console.log(storageData)
             .someOwnClass {
               background: red;
             }
+            @font-face {
+              font-family: Good Times;
+              src: url(${fontGoodTimes}) format("opentype")
+            }
+
+            @font-face {
+              font-family: Roboto Mono;
+              src: url(${fontRobotoMono})
+            }
+
           `}
         </style>
       </Head>
@@ -278,11 +294,6 @@ console.log(storageData)
           )}
         </>
       )}
-      {/*!iframeHideMenu && (
-        <footer className={`${styles.mainFooter} mainFooter`} >
-          {getText(`App_Footer`, `Powered by OnOut - [no-code tool to create NFTStake](https://onout.org/nftstake/)`)}
-        </footer>
-      )*/}
     </div>
   );
 }

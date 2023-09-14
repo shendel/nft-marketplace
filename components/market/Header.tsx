@@ -4,6 +4,7 @@ import FaIcon from "/components/FaIcon"
 import { getLink } from "/helpers/getLink"
 import { getAssets } from "/helpers/getAssets"
 import WalletModal from "./WalletModal"
+import useStorage from "/storage/"
 
 export default function Header(props) {
   const links = [
@@ -21,7 +22,16 @@ export default function Header(props) {
       href: getLink(`sell`)
     }
   ]
-  const chainId = 5
+  const {
+    storageData,
+  } = useStorage()
+
+  const [ isMenuOpened, setIsMenuOpened ] = useState(false)
+  
+  const onCloseMenu = () => {
+    setIsMenuOpened(false)
+  }
+  
   const {
     isWalletConnecting,
     isConnected,
@@ -29,9 +39,21 @@ export default function Header(props) {
     activeChainId,
     activeWeb3,
     connectWeb3,
-    switchChainId
-  } = useWeb3(chainId)
+    switchChainId,
+    setChainId,
+  } = useWeb3()
   
+  useEffect(() => {
+    if (!address) {
+      setIsMenuOpened(false)
+    }
+  }, [ address ])
+  useEffect(() => {
+    if (storageData && storageData.marketplaceChainId) {
+      console.log('>>> HEADER setChainId', storageData.marketplaceChainId)
+      setChainId(storageData.marketplaceChainId)
+    }
+  }, [ storageData ])
 
   const [ isMobileMenuOpened, setIsMobileMenuOpened ] = useState(false)
   
@@ -130,6 +152,21 @@ export default function Header(props) {
                   <path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.25 18.6h19.5M3.25 13.182h19.5M3.25 7.766h19.5"></path>
                 </svg>
               </button>
+              {address && (
+                <div className="useProfileMobile">
+                  <a href={getLink('profile')}>
+                    <img className="hover:scale-105 transition-all duration-150" 
+                      alt="Profile" 
+                      src={getAssets(`images/user-icon.png`, 'userIcon')}
+                      style={{
+                        objectFit: 'contain',
+                        width: '30px',
+                        height: '30px',
+                      }}
+                    />
+                  </a>
+                </div>
+              )}
               <ul className={`${(!isMobileMenuOpened) ? 'hidden' : ''} text-gray-200 transition-all flex border border-gray-100 border-opacity-40 shadow shadow-white flex-col items-start px-6 gap-2 py-5 duration-150 top-2 right-2 z-10 w-[280px] bg-slate-900 rounded-xl absolute`}>
                 <button onClick={() => { setIsMobileMenuOpened(false) }} className="absolute right-4 hover:scale-105">
                   <svg xmlns="http://www.w3.org/2000/svg" width="26" height="27" viewBox="0 0 26 27" fill="none">
@@ -141,6 +178,7 @@ export default function Header(props) {
                     <button
                       type="button"
                       className="tw-connected-wallet !px-5 !rounded-[2px] css-16br1f7"
+                      onClick={() => { setIsMenuOpened(true) }}
                     >
                       <FaIcon icon="wallet" />
                       {address.substr(0,6)}{`...`}{address.substr(-4,4)}
@@ -198,6 +236,7 @@ export default function Header(props) {
                   style={{
                     minWidth: '140px',
                   }}
+                  onClick={() => { setIsMenuOpened(true) }}
                 >
                   <span style={{ paddingRight: '10px' }}>
                     <FaIcon icon="wallet" />
@@ -240,7 +279,9 @@ export default function Header(props) {
           </div>
         </nav>
       </div>
-      {/*<WalletModal />*/}
+      {address && isMenuOpened && (
+        <WalletModal onClose={onCloseMenu} />
+      )}
     </>
   )
 }

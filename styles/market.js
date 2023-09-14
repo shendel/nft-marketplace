@@ -1,5 +1,5 @@
 import css from 'styled-jsx/css';
- 
+
 export default css.global`
 *,
 :after,
@@ -2491,16 +2491,6 @@ html {
 
 html {
 	color-scheme: dark
-}
-
-@font-face {
-	font-family: Good Times;
-	src: url(/_next/static/media/goodtimes.c059b8a5.otf) format("opentype")
-}
-
-@font-face {
-	font-family: Roboto Mono;
-	src: url(/_next/static/media/RobotoMono.2d05b25e.ttf)
 }
 
 footer {
