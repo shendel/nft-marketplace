@@ -157,13 +157,16 @@ export default function NftCard(props) {
                           }}
                         ></div>
                         <ImgPrecache
-                          noLoader={true}
                           className="object-cover object-center group-hover:scale-110 transition-all duration-200"
                           style={{
                             objectFit: 'contain',
                             width: '100%',
                             height: '100%',
                             position: 'relative',
+                          }}
+                          loadStyle={{
+                            width: '335px',
+                            height: '275px',
                           }}
                           src={ipfsUrl(jsonData.image)}
                           onLoad={onLoaded}

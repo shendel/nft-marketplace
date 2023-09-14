@@ -11,10 +11,25 @@ export default function ImgPrecache(options) {
   const [ imageCache, setImageCache ] = useState(false)
   const [ imageCached, setImageCached ] = useState(false)
   
+  const [ progressStarted, setProgressStarted ] = useState(false)
+  const [ progressLoad, setProgressLoad ] = useState(0)
+  
+  const bgLoadImage = (src) => {
+    const xmlHTTP = new XMLHttpRequest()
+    xmlHTTP.open('GET',  src, true)
+    xmlHTTP.responseType = 'arraybuffer'
+    xmlHTTP.onprogress = function(e) {
+      setProgressLoad(Math.round((e.loaded / e.total) * 100))
+    }
+    xmlHTTP.send()
+    setProgressStarted(true)
+  }
+  
   useEffect(() => {
     if (src) {
+      bgLoadImage(src)
       const cache = new Image()
-
+      cache.onloadprogress = function(e) { console.log('>>> ImgPrecache',  e.loaded / e.total ) };
       cache.onload = () => {
         setImageCached(true)
       }
@@ -25,33 +40,35 @@ export default function ImgPrecache(options) {
 
   const _cleanOptions = {}
   Object.keys(options).forEach((key) => {
-    if (key != 'noLoader') _cleanOptions[key] = options[key]
+    if (
+      (key != 'noLoader')
+      && (key != 'loadClass')
+      && (key != 'loadStyle')
+    ) _cleanOptions[key] = options[key]
   })
+
   return (
     <>
-      {imageCached ? (
+      {(imageCached) ? (
         <img loading="lazy" {..._cleanOptions} />
       ) : (
         <>
           {!noLoader && (
-            <div
-              {..._cleanOptions}
+            <div className={(options.loadClass) ? options.loadName : ''} 
               style={{
-                background: '#000000',
-                position: 'relative',
+                ...((options.loadStyle) ? options.loadStyle : {}),
+                display: 'flex',
+                textAlign: 'center',
+                alignItems: 'center'
               }}
             >
-              <img
-                src={getAssets('images/index-gallery-loader.svg', 'IndexGalleryLoader')} 
-                style={{
-                  width: '50%',
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  marginTop: '-25%',
-                  marginLeft: '-25%',
+              <strong style={{
+                  width: '100%',
+                  display: 'block'
                 }}
-              />
+              >
+                {progressLoad}{`%`}
+              </strong>
             </div>
           )}
         </>
