@@ -17,10 +17,12 @@ const designGroups = [
     title: 'Main settings',
     key: 'mainSettings',
     items: [
-      { type: 'uri', title: 'Logo uri (Desctop)', target: 'logoUriDesctop' },
+      { type: 'uri', title: 'Logo uri (Desctop)', target: 'logoUriDesktop' },
       { type: 'uri', title: 'Logo uri (Mobile)', target: 'logoUriMobile' },
+      /*
       { type: 'uri', title: 'Footer logo uri', target: 'logoFooterUri' },
       { type: 'number', title: 'Logo max width', target: 'logoMaxWidth', unit: 'px' },
+      */
       /*{ type: 'color', title: 'Color of text after "Your Unstaked NFTs"', target: 'stakeYourUnstakedDescColor' },*/
     ],
   },

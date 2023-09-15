@@ -14,7 +14,8 @@ export default function Header(props) {
     isOwner,
     storageMenu,
     storageData,
-    isInstalled
+    isInstalled,
+    getDesign,
   } = props
   
   const menuItems = (storageMenu && storageMenu.length ? storageMenu : defMenus)
@@ -133,10 +134,14 @@ export default function Header(props) {
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-7 xl:gap-9 2xl:gap-11">
             <a className="lg:hidden" href={getLink(`index`)}>
-              <span>[LOGO]</span>
+              <img
+                src={getDesign('logoUriMobile', `uri`, getAssets(`images/logo.png`, 'logoUriMobile'))}
+              />
             </a>
             <a className="hidden lg:block" href={getLink(`index`)}>
-              <span>[LOGO]</span>
+              <img
+                src={getDesign('logoUriDesktop', `uri`, getAssets(`images/logo.png`, 'logoUriDesktop'))}
+              />
             </a>
           </div>
           {/* Mobile menu */}
