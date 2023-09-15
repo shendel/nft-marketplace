@@ -10,9 +10,8 @@ export const createNftMetadata = (options) => {
     ownMetadata: {},
     ...options
   }
-  console.log('>> options', options)
+
   return new Promise((resolve, reject) => {
-    console.log(imageData)
     IpfsUpload(imageData).then((imageCid) => {
       const json = {
         image: `ipfs://${imageCid}`,

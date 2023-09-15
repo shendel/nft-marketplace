@@ -17,7 +17,6 @@ export default function Header(options) {
   
   useEffect(() => {
     isMetamaskConnected().then((_isConnected) => {
-      console.log('>>> header', _isConnected)
       connectWithMetamask()
     })
     onWalletChanged(async (newAccount) => {

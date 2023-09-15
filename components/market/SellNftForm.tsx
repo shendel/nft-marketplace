@@ -53,7 +53,6 @@ export default function SellNftForm(options) {
   const needChainInfo = CHAIN_INFO(chainId)
 
   const addNotify = (msg, style) => {
-    console.log('>>> NOTIFY', style, msg)
   }
   
   useEffect(() => {
@@ -65,7 +64,6 @@ export default function SellNftForm(options) {
         ownerAddress: userAddress,
         operatorAddress: marketplaceContract,
       }).then((approved) => {
-        console.log('>>> approved', approved)
         setIsApproved(approved)
         setIsApprovedFetching(false)
       }).catch((err) => {
@@ -86,7 +84,6 @@ export default function SellNftForm(options) {
         setMarketInfo(_marketInfo)
         setTradeFee(_marketInfo.tradeFee)
         setMarketInfoFetched(true)
-        console.log('>>>>', _marketInfo)
       }).catch((err) => {
         console.log('>>> fail fetch market info', err)
       })
@@ -99,7 +96,6 @@ export default function SellNftForm(options) {
         erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
         chainId,
       }).then((answ) => {
-        console.log('>>> ERC20 info', answ)
         setAllowedERC20Info(answ)
         setAllowedERC20InfoFetched(true)
       }).catch((err) => {

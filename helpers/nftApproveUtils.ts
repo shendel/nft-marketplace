@@ -10,7 +10,6 @@ export const NftIsApproved = (options) => {
     nftAddress,
     operatorAddress,
   } = options
-  console.log('>>> options', options)
   return new Promise((resolve, reject) => {
     activeWeb3.eth.getAccounts().then(async (accounts) => {
       if (accounts.length>0) {

@@ -149,7 +149,7 @@ export default function TabTexts(options) {
             saveGroupData[itemData.code] = newTexts[itemData.code]
           }
         })
-        console.log(groupKey, groupData, saveGroupData)
+
         setIsTextsSaving(true)
         saveExStorageConfig({
           key: `texts_${groupKey}`,

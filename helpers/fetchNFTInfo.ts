@@ -31,7 +31,6 @@ const fetchNftInfo = (address, chainId) => {
 
             contract.methods.isNFTStakeToken().call().then((isNFTStakeToken) => {
               try {
-                console.log('>>> begin')
                 const multicall = new web3.eth.Contract(MulticallAbi, MULTICALL_CONTRACTS[chainId])
                 const abiI = new AbiInterface(NFTAbi)
                 callMulticall({

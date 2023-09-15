@@ -22,7 +22,6 @@ const callMPMethod = (options) => {
         const activeWallet = accounts[0]
         const mpContract = new activeWeb3.eth.Contract(MarketplaceData.abi, contractAddress)
 
-        console.log('>> amount', weiAmount)
         const sendArgs = await calcSendArgWithFee(
           activeWallet,
           mpContract,
@@ -32,7 +31,6 @@ const callMPMethod = (options) => {
         )
         const gasPrice = await activeWeb3.eth.getGasPrice()
         sendArgs.gasPrice = gasPrice
-        console.log('>> amount 2', weiAmount, sendArgs)
 
         mpContract.methods[method](...(args || []))
           .send(sendArgs)

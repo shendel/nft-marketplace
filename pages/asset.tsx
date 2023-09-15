@@ -62,7 +62,6 @@ const MarketAsset: NextPage = (props) => {
         _tokenId,
         _isSellOpened,
       ] = (url.split('#')[1] || '').split('/');
-      console.log('>>> HASH', _isSellOpened)
       setCollectionAddress(_collectionAddress)
       setTokenId(_tokenId)
       setMarketTokenInfo(false)
@@ -89,7 +88,6 @@ const MarketAsset: NextPage = (props) => {
       collectionAddress,
       tokenId,
     }).then((answ) => {
-      console.log('>>> market token info', answ)
       if (answ?.tokenInfo) {
         setMarketTokenInfo(answ.tokenInfo)
         setTokenNotListening(false)
@@ -128,7 +126,6 @@ const MarketAsset: NextPage = (props) => {
             setSellCurrency(answ[marketTokenInfo.erc20])
           }
           setIsSellCurrencyFetched(true)
-          console.log('>> allowedERC20', answ)
         }).catch((err) => {
           setIsSellCurrencyFetched(true)
           console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
@@ -176,8 +173,6 @@ const MarketAsset: NextPage = (props) => {
   const [ isMyToken, setIsMyToken ] = useState(false)
   useEffect(() => {
     if (connectedAddress && tokenOwner) {
-      console.log('>>> IS MY TOKEN', connectedAddress && tokenOwner && connectedAddress.toLowerCase() == tokenOwner.toLowerCase())
-      console.log(connectedAddress, tokenOwner)
       setIsMyToken(connectedAddress.toLowerCase() == tokenOwner.toLowerCase())
     } else {
       setIsMyToken(false)

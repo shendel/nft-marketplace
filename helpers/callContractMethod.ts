@@ -21,7 +21,6 @@ const callContractMethod = (options) => {
       if (accounts.length>0) {
         const activeWallet = accounts[0]
 
-        console.log('>> amount', weiAmount)
         const sendArgs = await calcSendArgWithFee(
           activeWallet,
           contract,
@@ -31,13 +30,11 @@ const callContractMethod = (options) => {
         )
         const gasPrice = await activeWeb3.eth.getGasPrice()
         sendArgs.gasPrice = gasPrice
-        console.log('>> amount 2', weiAmount, sendArgs)
 
         let txHash
         contract.methods[method](...(args || []))
           .send(sendArgs)
           .on('transactionHash', (hash) => {
-            console.log('transaction hash:', hash)
             txHash = hash
             onTrx(hash)
           })
@@ -47,7 +44,6 @@ const callContractMethod = (options) => {
             reject(error)
           })
           .on('receipt', (receipt) => {
-            console.log('transaction receipt:', receipt)
             onSuccess(receipt)
           })
           .then((res) => {

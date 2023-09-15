@@ -35,16 +35,13 @@ const approveToken = (options) => {
         contract.methods['approve'](...([ approveFor, weiAmount ]))
           .send(sendArgs)
           .on('transactionHash', (hash) => {
-            console.log('transaction hash:', hash)
             onTrx(hash)
           })
           .on('error', (error) => {
-            console.log('transaction error:', error)
             onError(error)
             reject(error)
           })
           .on('receipt', (receipt) => {
-            console.log('transaction receipt:', receipt)
             onSuccess(receipt)
           })
           .then((res) => {

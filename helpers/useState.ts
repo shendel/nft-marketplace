@@ -45,7 +45,6 @@ export const useStateUri = (defValue, options = {}) => {
     } else {
       setHasError(false)
     }
-    console.log('_setValue', _setValue)
     setValue(_setValue)
   }
 

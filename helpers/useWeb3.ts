@@ -18,7 +18,6 @@ const useWeb3 = (_chainId) => {
   const [ isSwitchChain, setIsSwitchChain ] = useState(false)
   
   const initOnWeb3Ready = async () => {
-    console.log('>>> initOnWeb3Ready', activeChainId, activeWeb3)
     if (activeWeb3 && chainId && (`${activeChainId}` == `${chainId}`)) {
       activeWeb3.eth.getAccounts().then((accounts) => {
         //setAddress(accounts[0] || false)
@@ -29,7 +28,6 @@ const useWeb3 = (_chainId) => {
       const _isConnected = await isMetamaskConnected()
       const _lsConnected = window.localStorage.getItem('WEB3_CONNECTED')
       if (_isConnected) {// && _lsConnected) {
-        console.log('>> do connectWeb3')
         connectWeb3()
       } else {
         setAddress(false)
@@ -48,7 +46,6 @@ const useWeb3 = (_chainId) => {
   
   if (!_chainId) {
     useEffect(() =>{
-      console.log('>>> useWeb3 chain', chainId)
       if (chainId) {
         initOnWeb3Ready()
       }

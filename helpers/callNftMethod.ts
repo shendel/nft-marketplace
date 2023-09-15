@@ -22,7 +22,6 @@ const callNftMethod = (options) => {
         const activeWallet = accounts[0]
         const nftContract = new activeWeb3.eth.Contract(NftContractData.abi, contractAddress)
 
-        console.log('>> amount', weiAmount)
         const sendArgs = await calcSendArgWithFee(
           activeWallet,
           nftContract,
@@ -32,7 +31,6 @@ const callNftMethod = (options) => {
         )
         const gasPrice = await activeWeb3.eth.getGasPrice()
         sendArgs.gasPrice = gasPrice
-        console.log('>> amount 2', weiAmount, sendArgs)
 
         nftContract.methods[method](...(args || []))
           .send(sendArgs)

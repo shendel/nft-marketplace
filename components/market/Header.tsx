@@ -45,7 +45,6 @@ export default function Header(props) {
   } = useWeb3()
   
   useEffect(() => {
-    console.log('>>> HEADER address', address)
     if (!address) {
       setIsMenuOpened(false)
     }

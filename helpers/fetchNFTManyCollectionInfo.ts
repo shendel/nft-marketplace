@@ -65,7 +65,6 @@ const fetchNFTManyCollectionInfo = (options) => {
           multicall,
           calls,
         }).then((mcAnswer) => {
-          console.log('>>> mcAnswer', mcAnswer)
           resolve(mcAnswer)
         }).catch((err) => {
           console.log('>>> Fail fetch many nft meta', err)

@@ -80,7 +80,6 @@ export default function SellNftModal(options) {
       ownerAddress: userAddress,
       operatorAddress: marketplaceContract,
     }).then((approved) => {
-      console.log('>>> approved', approved)
       setIsApproved(approved)
       setIsApprovedFetching(false)
     }).catch((err) => {

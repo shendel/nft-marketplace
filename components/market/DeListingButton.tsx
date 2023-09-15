@@ -24,7 +24,6 @@ export default function DeListingButton(options) {
   } = useWeb3(chainId)
 
   const addNotify = (msg, style) => {
-    console.log('>>> NOTIFY', style, msg)
   }
   const [ isDeListing, setIsDeListing ] = useState(false)
   const doDeListing = () => {

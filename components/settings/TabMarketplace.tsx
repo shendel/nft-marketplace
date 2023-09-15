@@ -184,7 +184,6 @@ export default function TabMarketplace(options) {
         address: deployedMPContract,
         chainId: deployedMPChainId,
       }).then((info) => {
-        console.log('>> MP info', info)
         setDeployedMPInfo(info)
       })
     }
@@ -266,7 +265,6 @@ export default function TabMarketplace(options) {
       chainId: existsMPChainId,
       onlyInfo: true,
     }).then((info) => {
-      console.log('>>> info', info)
       if (info && info.isMPContract) {
         setIsExistsMPFetched(true)
         setExistMPInfo(info)

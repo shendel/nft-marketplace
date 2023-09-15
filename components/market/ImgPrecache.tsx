@@ -42,7 +42,6 @@ export default function ImgPrecache(options) {
     if (src) {
       bgLoadImage(src)
       const cache = new Image()
-      cache.onloadprogress = function(e) { console.log('>>> ImgPrecache',  e.loaded / e.total ) };
       cache.onload = () => {
         setImageCached(true)
       }

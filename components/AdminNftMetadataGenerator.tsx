@@ -36,7 +36,6 @@ export default function AdminNftMetadataGenerator(options) {
   const [ metadataIPFS, setMetadataIPFS ] = useState(false)
   
   useEffect(() => {
-    console.log('>>> setMetadata')
     setMetadata({
       imageData,
       name,

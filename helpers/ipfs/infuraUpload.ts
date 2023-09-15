@@ -15,9 +15,6 @@ const InfuraIPFS = ipfsHttpClient({
 export const infuraUpload = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log( {
-        authorization: INFURA_AUTHORIZATION,
-      })
       
       const result = await InfuraIPFS.add(data)
       resolve(result.path)

@@ -48,7 +48,6 @@ const fetchNftContent = (options) => {
               }
             }
           })
-          console.log('>>> fetchNftContent', _ret)
           resolve(_ret)
         }).catch((err) => {
           console.log('>>> Fail fetch all info', err)

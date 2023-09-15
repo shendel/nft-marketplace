@@ -22,7 +22,6 @@ export default function IndexGallery(options) {
         offet: 0,
         limit: 4
       }).then((info) => {
-        console.log('IndexGallery', info)
         setMarketTokens(info.tokensAtSale)
       })
     }

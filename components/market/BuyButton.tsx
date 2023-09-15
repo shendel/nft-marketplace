@@ -34,11 +34,9 @@ export default function BuyButton(options) {
     switchChainId
   } = useWeb3(chainId)
 
-  useEffect(() => {
-    console.log('>>> BUY BUTTON', address)
-  }, [ address ])
+
   const addNotify = (msg, style) => {
-    console.log('>>> NOTIFY', style, msg)
+
   }
 
   const [ sellCurrency, setSellCurrency ] = useState(false)

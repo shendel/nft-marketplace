@@ -63,7 +63,6 @@ export default function WalletModal(options) {
           setAllowedTokensInfo(info)
           setAllowedTokensInfoFetching(false)
           setAllowedTokensInfoFetched(true)
-          console.log('WalletInfo - tokens', info)
         }).catch((err) => {
           console.log('WalletInfo - fail fetch tokens info', err)
         })
@@ -85,7 +84,6 @@ export default function WalletModal(options) {
         setBalance(bal)
         setIsBalanceFetched(true)
         setIsBalanceFetching(false)
-        console.log('WalletInfo - balance', bal)
       }).catch((err) => {
         setIsBalanceFetching(false)
         console.log('WalletInfo - fail fetch user balance', err)
@@ -100,8 +98,7 @@ export default function WalletModal(options) {
   }
 
   const chainInfo = CHAIN_INFO(marketplaceChainId)
-  console.log('>> chainInfo', chainInfo)
-  console.log('>>> SHOW', (isBalanceFetched || allowedTokensInfoFetched) )
+
   return (
     <>
       <style>
