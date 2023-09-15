@@ -92,6 +92,9 @@ const Settings: NextPage = (props) => {
   const [address, setAddress] = useState(false)
   const [isWalletConecting, setIsWalletConnecting] = useState(false)
 
+  useEffect(() => {
+    console.log('>>> ADDRESS', address)
+  }, [ address ])
   const processError = (error, error_namespace) => {
     let metamaskError = false
     try {
@@ -346,7 +349,11 @@ const Settings: NextPage = (props) => {
   /* -------------------------------------------- */
   //console.log('>>> storageData', storageData, showInstallBox, (storageData && !storageData.isInstalled), !isInstalledOnDomain)
 
-
+  useEffect(() => {
+    tabMarketplace.updateState({
+      activeAccount: address,
+    })
+  }, [ address ])
   
   if (isInstalledOnDomain) showInstallBox = false
   return (

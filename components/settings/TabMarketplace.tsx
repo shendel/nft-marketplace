@@ -521,45 +521,49 @@ export default function TabMarketplace(options) {
                   onChange: setMarketChainId,
                   subForm: true
                 })}
-                <div className={styles.infoRow}>
-                  <label>NFT Collections:</label>
-                  <div>
-                    <div>
-                      <strong className={styles.inputInfo}>
-                        {`List of NFT contracts that can be allowed for trading`}
-                      </strong>
+                {marketChainId && (
+                  <>
+                    <div className={styles.infoRow}>
+                      <label>NFT Collections:</label>
+                      <div>
+                        <div>
+                          <strong className={styles.inputInfo}>
+                            {`List of NFT contracts that can be allowed for trading`}
+                          </strong>
+                        </div>
+                        <div>
+                          <AddressList chainId={marketChainId} items={nftCollections} onChange={(v) => { setNftCollections(v) }} />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <AddressList chainId={marketChainId} items={nftCollections} onChange={(v) => { setNftCollections(v) }} />
+                    <div className={styles.infoRow}>
+                      <label>Trade fee:</label>
+                      <div>
+                        <div>
+                          <input type="number" min="0" max="30" value={tradeFee} onChange={(e) => { setTradeFee(e) }} />
+                          <strong>%</strong>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className={styles.infoRow}>
-                  <label>Trade fee:</label>
-                  <div>
-                    <div>
-                      <input type="number" min="0" max="30" value={tradeFee} onChange={(e) => { setTradeFee(e) }} />
-                      <strong>%</strong>
+                    <div className={styles.infoRow}>
+                      <label>Fee receiver:</label>
+                      <div>
+                        <input type="text" value={feeReceiver} onChange={(e) => { setFeeReceiver(e) }} />
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className={styles.infoRow}>
-                  <label>Fee receiver:</label>
-                  <div>
-                    <input type="text" value={feeReceiver} onChange={(e) => { setFeeReceiver(e) }} />
-                  </div>
-                </div>
-                <div className={styles.infoRow}>
-                  <label>Allowed ERC20 for trade:</label>
-                  <div>
-                    <div>
-                      <strong className={styles.inputInfo}>List of token contracts that can be used for trading on par with native currency</strong>
+                    <div className={styles.infoRow}>
+                      <label>Allowed ERC20 for trade:</label>
+                      <div>
+                        <div>
+                          <strong className={styles.inputInfo}>List of token contracts that can be used for trading on par with native currency</strong>
+                        </div>
+                        <div>
+                          <AddressList chainId={marketChainId} items={allowedERC20} onChange={(v) => { setAllowedERC20(v) }} />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <AddressList chainId={marketChainId} items={allowedERC20} onChange={(v) => { setAllowedERC20(v) }} />
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
                 <div className={styles.actionsRow}>
                   <SwitchNetworkAndCall
                     chainId={marketChainId}

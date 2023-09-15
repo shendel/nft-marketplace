@@ -14,6 +14,8 @@ export default function ImgPrecache(options) {
   const [ progressStarted, setProgressStarted ] = useState(false)
   const [ progressLoad, setProgressLoad ] = useState(0)
   
+  const [ reloadOnError, setReloadOnError ] = useState(false)
+  
   const bgLoadImage = (src) => {
     const xmlHTTP = new XMLHttpRequest()
     xmlHTTP.open('GET',  src, true)
@@ -22,9 +24,20 @@ export default function ImgPrecache(options) {
       setProgressLoad(Math.round((e.loaded / e.total) * 100))
     }
     xmlHTTP.send()
+    xmlHTTP.onerror = function (e) {
+      console.log('>>>> IMG PRECACHE ERROR', e)
+      setReloadOnError(true)
+    }
     setProgressStarted(true)
   }
   
+  useEffect(() => {
+    if (reloadOnError) {
+      console.log('>> DO RELOAD')
+      setReloadOnError(false)
+      bgLoadImage(src)
+    }
+  }, [ reloadOnError ])
   useEffect(() => {
     if (src) {
       bgLoadImage(src)
