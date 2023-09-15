@@ -1,10 +1,9 @@
 export const sysMenus = {
-  HOME: `index`,
-  MINT: `mint`,
-  MINTOWN: `mintown`,
-  MARKETPLACE: `marketplace`,
-  STAKE: `stake`
+  HOME: '',
+  BUY: 'buy',
+  SELL: 'sell'
 }
+
 
 export const defMenus = [
   {
@@ -13,29 +12,37 @@ export const defMenus = [
     link: '',
     blank: false,
   },
-  /*
   {
-    title: 'Mint',
-    target: 'MINTOWN',
+    title: 'Buy',
+    target: 'BUY',
     link: '',
-    blank: false
-  },
-  */
-  {
-    title: 'Mint Random NFT',
-    target: 'MINT',
-    link: '',
-    blank: false
+    blank: false,
   },
   {
-    title: 'Marketplace',
-    target: 'MARKETPLACE',
+    title: 'Sell',
+    target: 'SELL',
     link: '',
     blank: false
+  }
+]
+
+
+export const defFooterMenus = [
+  {
+    title: 'Home',
+    target: 'HOME',
+    link: '',
+    blank: false,
   },
   {
-    title: 'Stake',
-    target: 'STAKE',
+    title: 'Buy',
+    target: 'BUY',
+    link: '',
+    blank: false,
+  },
+  {
+    title: 'Sell',
+    target: 'SELL',
     link: '',
     blank: false
   }

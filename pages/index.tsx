@@ -20,6 +20,7 @@ const Home: NextPage = (props) => {
       isBaseConfigReady,
     },
     isOwner,
+    getText
   } = props
   const router = useRouter()
   
@@ -34,9 +35,11 @@ const Home: NextPage = (props) => {
         {styles}
       </style>
       <div>
-        <Header />
+        <Header {...props} />
         <main className="flex flex-col items-center px-6 md:px-10">
-          <div className="mt-10 flex flex-col items-center pb-12 md:flex-row-reverse md:py-10 lg:pt-12 md:gap-12 xl:gap-28 2xl:gap-40">
+          <div 
+            className="mt-10 flex flex-col items-center pb-12 md:flex-row-reverse md:py-10 lg:pt-12 md:gap-12 xl:gap-28 2xl:gap-40"
+          >
             <IndexGallery chainId={chainId} marketplaceContract={marketplaceContract} />
             <div className="md:max-w-[500px] xl:max-w-[600px] 2xl:max-w-[700px] relative mt-16 text-center z-10 md:text-left flex flex-col items-center md:mt-2 md:items-start lg:mt-10">
               <div className="absolute overflow-hidden hidden lg:block -z-50 lg:left-[calc(-90%-30rem)] xl:left-[calc(-40%-30rem)] lg:top-[calc(50%-30rem)] 2xl:left-[calc(-5%-30rem)] 2xl:top-[calc(50%-30rem)] transform-gpu blur-[85px] " aria-hidden="true">
@@ -48,10 +51,10 @@ const Home: NextPage = (props) => {
                 ></div>
               </div>
               <h1 className="text-white font-GoodTimes text-[34px] md:text-4xl md:tracking-wide md:leading-relaxed lg:text-5xl xl:text-6xl 2xl:text-7xl">
-                MARKET TITLE
+                {getText('MainPage_Title', 'Title')}
               </h1>
               <p className="mt-8 md:mt-6 2xl:mt-[26px] lg:mt-7 text-sm leading-6 px-3 md:px-0 text-moon-orange text-md md:text-left lg:text-base xl:text-lg max-w-sm lg:max-w-md xl:max-w-[600px] 2xl:max-w-[658px]">
-                MARKET DESCRIPTION
+                {getText('MainPage_Desc', 'Marketplace description')}
               </p>
               <a href={getLink(`buy`)}>
                 <button className="mt-12 lg:mt-10 2xl:mt-[50px] font-mono flex text-gray-100 hover:bg-gradient-to-b from-yellow-600  to-moon-secondary hover:text-white duration-150 items-center gap-2 border-[0.6px] hover:border-yellow-600 rounded border-white border-opacity-50 py-3 pl-6 pr-6 font-bold">
@@ -75,7 +78,7 @@ const Home: NextPage = (props) => {
             </div>
           </div>
         </main>
-        <Footer />
+        <Footer {...props} />
       </div>
     </>
   );

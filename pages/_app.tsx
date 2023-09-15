@@ -40,6 +40,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     storageTexts,
     storageDesign,
     storageMenu,
+    storageFooterMenu,
   } = useStorage()
   //const storageDesign = storageData?.exdata?.design || {}
   //const storageTexts = storageData?.exdata?.texts || {}
@@ -283,6 +284,7 @@ console.log(storageData)
                     storageTexts={storageTexts}
                     storageDesign={storageDesign}
                     storageMenu={storageMenu}
+                    storageFooterMenu={storageFooterMenu}
                     getText={getText}
                     getDesign={getDesign}
                     iframeHideMenu={iframeHideMenu}

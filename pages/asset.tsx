@@ -227,7 +227,7 @@ const MarketAsset: NextPage = (props) => {
 
   return (
     <>
-      <Header />
+      <Header {...props} />
       <style jsx>
         {styles}
       </style>
@@ -463,7 +463,7 @@ const MarketAsset: NextPage = (props) => {
           </div>
         </article>
       </div>
-      <Footer />
+      <Footer {...props} />
     </>
   )
 };

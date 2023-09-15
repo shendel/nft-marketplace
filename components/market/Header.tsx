@@ -3,28 +3,23 @@ import { useEffect, useState } from "react"
 import FaIcon from "/components/FaIcon"
 import { getLink } from "/helpers/getLink"
 import { getAssets } from "/helpers/getAssets"
+import { defMenus, sysMenus } from "/appconfig/menu"
 import WalletModal from "./WalletModal"
 import useStorage from "/storage/"
 
 export default function Header(props) {
-  const links = [
-    {
-      title: 'Link 1',
-      href: 'https://google.com',
-      target: '_blank',
-    },
-    {
-      title: 'Buy',
-      href: getLink(`buy`)
-    },
-    {
-      title: 'Sell',
-      href: getLink(`sell`)
-    }
-  ]
+
+  
   const {
+    isOwner,
+    storageMenu,
     storageData,
-  } = useStorage()
+    isInstalled
+  } = props
+  
+  const menuItems = (storageMenu && storageMenu.length ? storageMenu : defMenus)
+
+
 
   const [ isMenuOpened, setIsMenuOpened ] = useState(false)
   
@@ -55,21 +50,6 @@ export default function Header(props) {
     }
   }, [ address ])
   
-  const [ isOwner, setIsOwner ] = useState(false)
-  useEffect(() => {
-    if (storageData && storageData.marketplaceChainId) {
-      console.log('>>> HEADER setChainId', storageData.marketplaceChainId)
-      setChainId(storageData.marketplaceChainId)
-    }
-    if (storageData && storageData.isOwner) {
-      setIsOwner(true)
-    }
-  }, [ storageData ])
-
-  if (isOwner) links.push({
-    title: 'Settings',
-    href: getLink('settings')
-  })
   const [ isMobileMenuOpened, setIsMobileMenuOpened ] = useState(false)
   
   return (
@@ -210,38 +190,59 @@ export default function Header(props) {
                     </button>
                   )}
                 </li>
-                {links.map((link, key) => {
-                  const props = {
-                    className: 'hover:scale-105 hover:text-orange-500 inline-block text-lg',
-                    href: link.href,
-                    ...((link.target) ? {
-                      target: link.target,
-                    } : {})
-                  }
+                {menuItems.map((menuItem, itemKey) => {
+                  const href = (menuItem.target !== ``) ? getLink(sysMenus[menuItem.target]) : menuItem.link
+                  
                   return (
-                    <li key={key}>
-                      <a {...props}>{link.title}</a>
+                    <li key={itemKey}>
+                      <a 
+                        className="hover:scale-105 hover:text-orange-500 inline-block text-lg"
+                        href={href}
+                        {...(menuItem.blank ? { target: '_blank' } : {})}
+                      >
+                        {menuItem.title}
+                      </a>
                     </li>
                   )
                 })}
+                {(isOwner || !isInstalled) && (
+                  <li>
+                    <a 
+                      className="hover:scale-105 hover:text-orange-500 inline-block text-lg"
+                      href={getLink(`settings`)}
+                    >
+                      Settings
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           </div>
           {/* Desktop menu */}
           <div className="hidden md:flex items-center">
             <div className="flex gap-7 lg:gap-9 xl:gap-14 2xl:gap-16">
-              {links.map((link, key) => {
-                const props = {
-                  className: 'hover:scale-105 hover:text-orange-500 inline-block text-lg lg:text-xl transition-all duration-150',
-                  href: link.href,
-                  ...((link.target) ? {
-                    target: link.target,
-                  } : {})
-                }
+              {menuItems.map((menuItem, itemKey) => {
+                const href = (menuItem.target !== ``) ? getLink(sysMenus[menuItem.target]) : menuItem.link
+                
                 return (
-                  <a key={key} {...props}>{link.title}</a>
+                  <a 
+                    key={itemKey}
+                    className="hover:scale-105 hover:text-orange-500 inline-block text-lg"
+                    href={href}
+                    {...(menuItem.blank ? { target: '_blank' } : {})}
+                  >
+                    {menuItem.title}
+                  </a>
                 )
               })}
+              {(isOwner || !isInstalled) && (
+                <a 
+                  className="hover:scale-105 hover:text-orange-500 inline-block text-lg"
+                  href={getLink(`settings`)}
+                >
+                  Settings
+                </a>
+              )}
             </div>
             <div className="ml-6 lg:ml-8 xl:ml-10 2xl:ml-12">
               {address && (

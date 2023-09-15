@@ -327,7 +327,7 @@ const MarketCollection: NextPage = (props) => {
   
   return (
     <>
-      <Header />
+      <Header {...props} />
       <style jsx>
         {styles}
       </style>
@@ -541,7 +541,7 @@ const MarketCollection: NextPage = (props) => {
           </div>
         )}
       </main>
-      <Footer />
+      <Footer {...props} />
     </>
   )
 };
