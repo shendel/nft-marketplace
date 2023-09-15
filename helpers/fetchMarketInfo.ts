@@ -88,6 +88,7 @@ const fetchMarketInfo = (options) => {
                   feeReceiver:              { func: 'getFeeReceiver' },
                 }
         }).then((mcAnswer) => {
+          console.log('>>> mcAnswer', mcAnswer)
           if (mcAnswer.tokensAtSale) {
             mcAnswer.tokensAtSale = Web3ObjectToArray(mcAnswer.tokensAtSale)
           }

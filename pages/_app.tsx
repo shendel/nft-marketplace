@@ -184,9 +184,9 @@ console.log(storageData)
   return (
     <div>
       <Head>
-        <title>{getText(`App_Title`, `NFTStake - Stake NFT - earn ERC20`)}</title>
-        <meta name="description" content={getText(`App_Description`, `NFTStake - Stake NFT - earn ERC20`)} />
-        <meta name="keywords" content={getText(`App_Keywords`, `NFT, Stake, ERC20, Blockchain`)} />
+        <title>{getText(`App_Title`, `NFTs Marketplace`)}</title>
+        <meta name="description" content={getText(`App_Description`, `NFTs Marketplace`)} />
+        <meta name="keywords" content={getText(`App_Keywords`, `NFTs Marketplace`)} />
         <style global>
           {`
             .svg-inline--fa {
@@ -247,7 +247,7 @@ console.log(storageData)
         <>
           {!storageIsLoading && storageData && !storageData.isInstalled && !isSettingsPage ? (
             <div className={styles.container}>
-              <h2>NFTStake need install on this domain</h2>
+              <h2>NFTs Marketplace need install on this domain</h2>
               <a href={getLink(`settings`)} className={`${styles.mainButton} ${styles.autoWidth} primaryButton`}>
                 Go to Install
               </a>
@@ -256,7 +256,7 @@ console.log(storageData)
             <>
               {showNeedConfig ? (
                 <div className={styles.container}>
-                  <h2>NFTStake need base setup</h2>
+                  <h2>NFTs Marketplace need base setup</h2>
                   <a href={getLink(`settings`)} className={`${styles.mainButton} ${styles.autoWidth} primaryButton`}>
                     Go to setup
                   </a>

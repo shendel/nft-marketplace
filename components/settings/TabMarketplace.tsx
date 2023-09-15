@@ -264,6 +264,7 @@ export default function TabMarketplace(options) {
     fetchMarketInfo({
       address: existsMPContract,
       chainId: existsMPChainId,
+      onlyInfo: true,
     }).then((info) => {
       console.log('>>> info', info)
       if (info && info.isMPContract) {
