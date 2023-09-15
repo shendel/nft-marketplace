@@ -1402,6 +1402,11 @@ contract Marketplace is Ownable, Pausable {
         uint256 utx;        // Время истечения лота (0 - бессрочный)
     }
 
+    struct CollectionTokenCount {
+        address collection;
+        uint256 count;
+    }
+
     uint constant public version = 1;
 
     uint private _tradeFee = 0;
@@ -1417,74 +1422,32 @@ contract Marketplace is Ownable, Pausable {
 
     SelledNFT[] private _marketTokens;
 
-    mapping(address => uint256) private _collectionTokensCount;
-
-    mapping(address => uint256) private _userTokensCount;
-
-    mapping(address => mapping(address => uint256)) private _userTokensCountByCollections;
+    /* Collection => Tokens */
+    mapping(address => SelledNFT[]) private _collectionTokens;
+    /* Seller => Tokens */
+    mapping(address => SelledNFT[]) private _userTokens;
+    /* Seller => Collection => Tokens */
+    mapping(address => mapping(address => SelledNFT[])) private _userTokensByCollections;
+    /* Collection => TokenId => LotInfo */
+    mapping(address => mapping(uint256 => SelledNFT)) private _collectionTokensMap;
 
     address private _feeReceiver;
 
-    function marketTokensGet(address collection, uint256 tokenId) public view returns (SelledNFT memory ret) {
-        for(uint256 i = 0; i < _marketTokens.length; i++) {
-            if (
-                (_marketTokens[i].collection == collection)
-                &&
-                (_marketTokens[i].tokenId == tokenId)
-            ) {
-                return _marketTokens[i];
-            }
-        }
-        return ret;
-    }
-
-    function getColletionTokensCount(address collection) public view returns (uint256) {
-        return _collectionTokensCount[collection];
-    }
-    function getUserCollectionTokensCount(address user, address collection) public view returns(uint256) {
-        return _userTokensCountByCollections[user][collection];
-    }
-    
-    struct CollectionTokenCount {
-        address collection;
-        uint256 count;
-    }
-    function getCollectionsTokensCount() public view returns (CollectionTokenCount[] memory ret) {
-        ret = new CollectionTokenCount[](_marketCollections.length);
-        for(uint256 i = 0; i < _marketCollections.length; i++) {
-            ret[i] = CollectionTokenCount(
-                address(_marketCollections[i]),
-                _collectionTokensCount[address(_marketCollections[i])]
-            );
-        }
-        return ret;
-    }
-    function getUserCollectionsTokenCount(address user) public view returns(CollectionTokenCount[] memory ret) {
-        ret = new CollectionTokenCount[](_marketCollections.length);
-        for(uint256 i = 0; i < _marketCollections.length; i++) {
-            ret[i] = CollectionTokenCount(
-                address(_marketCollections[i]),
-                _userTokensCountByCollections[user][address(_marketCollections[i])]
-            );
-        }
-        return ret;
-    }
-
     function _marketTokensAdd(SelledNFT memory lotInfo) internal {
         _marketTokens.push(lotInfo);
-        _collectionTokensCount[lotInfo.collection]++;
-        _userTokensCount[lotInfo.seller]++;
-        _userTokensCountByCollections[lotInfo.seller][lotInfo.collection]++;
+        _collectionTokensMap[lotInfo.collection][lotInfo.tokenId] = lotInfo;
+        _userTokens[lotInfo.seller].push(lotInfo);
+        _collectionTokens[lotInfo.collection].push(lotInfo);
+        _userTokensByCollections[lotInfo.seller][lotInfo.collection].push(lotInfo);
     }
+
     function _marketTokensDel(address collection, uint256 tokenId) internal {
         if (
             (_marketTokens[_marketTokens.length - 1].collection == collection)
             &&
             (_marketTokens[_marketTokens.length - 1].tokenId == tokenId)
         ) {
-            _userTokensCount[_marketTokens[_marketTokens.length -1].seller]--;
-            _userTokensCountByCollections[_marketTokens[_marketTokens.length -1].seller][collection]--;
-            _collectionTokensCount[collection]--;
+            delete _collectionTokensMap[collection][tokenId];
             _marketTokens.pop();
         }
         for(uint256 i = 0; i < _marketTokens.length; i++) {
@@ -1493,17 +1456,77 @@ contract Marketplace is Ownable, Pausable {
                 &&
                 (_marketTokens[i].tokenId == tokenId)
             ) {
-                _userTokensCount[_marketTokens[i].seller]--;
-                _userTokensCountByCollections[_marketTokens[i].seller][collection]--;
-                _collectionTokensCount[collection]--;
-                _marketTokens[i] = _marketTokens[_marketTokens.length -1];
+                _marketTokens[i] = _marketTokens[
+                    _marketTokens.length -1
+                ];
+                delete _collectionTokensMap[collection][tokenId];
                 _marketTokens.pop();
-                
                 return;
             }
         }
     }
-
+    function _userTokensDel(address seller, address collection, uint256 tokenId) internal {
+        if (
+            (   
+                _userTokens[seller][
+                    _userTokens[seller].length - 1
+                ].collection == collection
+            ) && (
+                _userTokens[seller][
+                    _userTokens[seller].length - 1
+                ].tokenId == tokenId
+            )
+        ) {
+            _userTokens[seller].pop();
+        }
+        for(uint256 i = 0; i < _userTokens[seller].length; i++) {
+            if (
+                (_userTokens[seller][i].collection == collection)
+                &&
+                (_userTokens[seller][i].tokenId == tokenId)
+            ) {
+                _userTokens[seller][i] = _userTokens[seller][
+                    _userTokens[seller].length -1
+                ];
+                _userTokens[seller].pop();
+                return;
+            }
+        }
+    }
+    function _userTokensByCollectionsDel(address seller, address collection, uint256 tokenId) internal {
+        if (_userTokensByCollections[seller][collection][
+                _userTokensByCollections[seller][collection].length - 1
+            ].tokenId == tokenId) {
+            _userTokensByCollections[seller][collection].pop();
+        }
+        for(uint256 i = 0; i < _userTokensByCollections[seller][collection].length; i++) {
+            if (_userTokensByCollections[seller][collection][i].tokenId == tokenId) {
+                _userTokensByCollections[seller][collection][i] = _userTokensByCollections[seller][collection][
+                    _userTokensByCollections[seller][collection].length -1
+                ];
+                _userTokensByCollections[seller][collection].pop();
+                return;
+            }
+        }
+    }
+    function _collectionTokensDel(address collection, uint256 tokenId) internal {
+        if (
+            _collectionTokens[collection][
+                _collectionTokens[collection].length - 1
+            ].tokenId == tokenId
+        ) {
+            _collectionTokens[collection].pop();
+        }
+        for(uint256 i = 0; i < _collectionTokens[collection].length; i++) {
+            if (_collectionTokens[collection][i].tokenId == tokenId) {
+                _collectionTokens[collection][i] = _collectionTokens[collection][
+                    _collectionTokens[collection].length -1
+                ];
+                _collectionTokens[collection].pop();
+                return;
+            }
+        }
+    }
     
 
     constructor(
@@ -1531,6 +1554,7 @@ contract Marketplace is Ownable, Pausable {
     function getAllowedCollections() public view returns(IERC721[] memory) {
         return _marketCollections;
     }
+
     function setAllowedCollections(address[] memory _newCollections) public onlyOwner {
         for(uint256 i = 0; i < _marketCollections.length; i++) {
             _allowedCollections[address(_marketCollections[i])] = false;
@@ -1541,7 +1565,6 @@ contract Marketplace is Ownable, Pausable {
             _allowedCollections[_newCollections[i]] = true;
         }
     }
-
 
     function setAllowedERC20(address[] memory newAllowedERC20) public onlyOwner {
         _allowedERC20 = newAllowedERC20;
@@ -1574,48 +1597,73 @@ contract Marketplace is Ownable, Pausable {
     function getTradeFee() public view returns (uint) {
         return _tradeFee;
     }
+
     function setTradeFee(uint _newTradeFee) public onlyOwner {
         _tradeFee = _newTradeFee;
+    }
+
+    function marketTokensGet(address collection, uint256 tokenId) public view returns (SelledNFT memory ret) {
+        return _collectionTokensMap[collection][tokenId];
+    }
+
+    function getColletionTokensCount(address collection) public view returns (uint256) {
+        return _collectionTokens[collection].length;
+    }
+
+    function getUserCollectionTokensCount(address seller, address collection) public view returns(uint256) {
+        return _userTokensByCollections[seller][collection].length;
+    }
+    
+    function getCollectionsTokensCount() public view returns (CollectionTokenCount[] memory ret) {
+        ret = new CollectionTokenCount[](_marketCollections.length);
+        for(uint256 i = 0; i < _marketCollections.length; i++) {
+            ret[i] = CollectionTokenCount(
+                address(_marketCollections[i]),
+                _collectionTokens[address(_marketCollections[i])].length
+            );
+        }
+        return ret;
+    }
+
+    function getUserCollectionsTokenCount(address seller) public view returns(CollectionTokenCount[] memory ret) {
+        ret = new CollectionTokenCount[](_marketCollections.length);
+        for(uint256 i = 0; i < _marketCollections.length; i++) {
+            ret[i] = CollectionTokenCount(
+                address(_marketCollections[i]),
+                _userTokensByCollections[seller][address(_marketCollections[i])].length
+            );
+        }
+        return ret;
     }
 
     function getMyTokensAtSale(uint256 offset, uint256 limit) public view returns(SelledNFT[] memory) {
         return getUserTokensAtSale(msg.sender, offset, limit);
     }
+
     function getUserTokensAtSale(address seller, uint256 offset, uint256 limit)
         public view
         returns (SelledNFT[] memory ret)
     {
-        if (_userTokensCount[seller] > 0) {
-            ret = new SelledNFT[](_userTokensCount[seller]);
-            uint256 counter = 0;
-            for (uint256 i = 0; i < _marketTokens.length; i++) {
-                if (_marketTokens[i].seller == seller) {
-                    ret[counter] = _marketTokens[i];
-                    counter++;
-                }
-            }
-        }
-        return ret;
+        return _userTokens[seller];
+    }
+
+    function getUserCollectionTokensAtSale(address seller, address collection, uint256 offset, uint256 limit)
+        public view 
+        returns (SelledNFT[] memory ret)
+    {
+        return _userTokensByCollections[seller][collection];
     }
 
     function getTokensAtSaleCount() public view returns (uint256) {
         return _marketTokens.length;
     }
+
     function getTokensAtSale(uint256 limit, uint256 offset) public view returns (SelledNFT[] memory) {
         return _marketTokens;
     }
+
     function getCollectionTokensAtSale(address collection, uint256 offset, uint256 limit) public view returns (SelledNFT[] memory ret) {
-        if (_collectionTokensCount[collection] > 0) {
-            ret = new SelledNFT[](_collectionTokensCount[collection]);
-            uint256 counter = 0;
-            for (uint256 i = 0; i < _marketTokens.length; i++) {
-                if (_marketTokens[i].collection == collection) {
-                    ret[counter] = _marketTokens[i];
-                    counter++;
-                }
-            }
-        }
-        return ret;
+        return _collectionTokens[collection];
     }
 
     function buyNFTbyERC20(address collection, uint tokenId)
@@ -1651,7 +1699,11 @@ contract Marketplace is Ownable, Pausable {
             );
         }
         IERC721(lotInfo.collection).transferFrom(address(this), msg.sender, lotInfo.tokenId);
-        _marketTokensDel(collection, tokenId);
+        
+        _marketTokensDel(lotInfo.collection, lotInfo.tokenId);
+        _userTokensDel(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
+        _collectionTokensDel(lotInfo.collection, lotInfo.tokenId);
+        _userTokensByCollectionsDel(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
 
         emit BuyWithERC20(
             lotInfo.seller, 
@@ -1687,7 +1739,11 @@ contract Marketplace is Ownable, Pausable {
         }
         
         IERC721(lotInfo.collection).transferFrom(address(this), msg.sender, lotInfo.tokenId);
-        _marketTokensDel(collection, tokenId);
+        
+        _marketTokensDel(lotInfo.collection, lotInfo.tokenId);
+        _userTokensDel(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
+        _collectionTokensDel(lotInfo.collection, lotInfo.tokenId);
+        _userTokensByCollectionsDel(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
 
         emit Buy(lotInfo.seller, msg.sender, lotInfo.collection, lotInfo.tokenId, lotInfo.price);
         
@@ -1737,14 +1793,18 @@ contract Marketplace is Ownable, Pausable {
     }
 
     function deSellNFT(address collection, uint256 tokenId) public {
-        SelledNFT memory token = marketTokensGet(collection, tokenId);
-        require( token.collection != address(0), "Token not founded at marketplace");
+        SelledNFT memory lotInfo = marketTokensGet(collection, tokenId);
+        require( lotInfo.collection != address(0), "Token not founded at marketplace");
         if(msg.sender != owner()) {
-            require(msg.sender == token.seller, "This is not your NFT");
+            require(msg.sender == lotInfo.seller, "This is not your NFT");
         }
-        IERC721(token.collection).transferFrom(address(this), token.seller, token.tokenId);
-        _marketTokensDel(token.collection,token.tokenId);
+        IERC721(lotInfo.collection).transferFrom(address(this), lotInfo.seller, lotInfo.tokenId);
 
-        emit WithdrawFromSale(token.seller, token.collection, token.tokenId);
+        _marketTokensDel(lotInfo.collection, lotInfo.tokenId);
+        _userTokensDel(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
+        _collectionTokensDel(lotInfo.collection, lotInfo.tokenId);
+        _userTokensByCollectionsDel(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
+
+        emit WithdrawFromSale(lotInfo.seller, lotInfo.collection, lotInfo.tokenId);
     }
 }
