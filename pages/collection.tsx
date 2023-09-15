@@ -153,12 +153,7 @@ const MarketCollection: NextPage = (props) => {
         console.log('>>> MARKET INFO', _marketInfo)
         setMarketInfo(_marketInfo)
 
-        setTokensAtSale(
-          Web3ObjectToArray(_marketInfo.tokensAtSale)
-            .sort((a,b) => {
-              return Number(a.utx) > Number(b.utx) ? -1 : 1
-            })
-        )
+        setTokensAtSale(_marketInfo.tokensAtSale)
 
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)

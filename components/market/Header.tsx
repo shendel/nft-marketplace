@@ -55,13 +55,21 @@ export default function Header(props) {
     }
   }, [ address ])
   
+  const [ isOwner, setIsOwner ] = useState(false)
   useEffect(() => {
     if (storageData && storageData.marketplaceChainId) {
       console.log('>>> HEADER setChainId', storageData.marketplaceChainId)
       setChainId(storageData.marketplaceChainId)
     }
+    if (storageData && storageData.isOwner) {
+      setIsOwner(true)
+    }
   }, [ storageData ])
 
+  if (isOwner) links.push({
+    title: 'Settings',
+    href: getLink('settings')
+  })
   const [ isMobileMenuOpened, setIsMobileMenuOpened ] = useState(false)
   
   return (

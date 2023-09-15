@@ -19,14 +19,11 @@ export default function IndexGallery(options) {
         address: marketplaceContract,
         chainId,
         onlyTokens: true,
+        offet: 0,
+        limit: 4
       }).then((info) => {
-        setMarketTokens(
-          Web3ObjectToArray(info.tokensAtSale)
-            .sort((a, b) => {
-              return Number(a.utx) > Number(b.utx) ? -1 : 1
-            })
-            .slice(0,4)
-          )
+        console.log('IndexGallery', info)
+        setMarketTokens(info.tokensAtSale)
       })
     }
   }, [chainId, marketplaceContract])

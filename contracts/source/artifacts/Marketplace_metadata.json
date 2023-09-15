@@ -330,6 +330,13 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "deSellAll",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -492,6 +499,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "getManySellAllowed",
+				"outputs": [
+					{
+						"internalType": "address[]",
+						"name": "",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -551,12 +571,12 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "limit",
+						"name": "offset",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "offset",
+						"name": "limit",
 						"type": "uint256"
 					}
 				],
@@ -596,7 +616,7 @@
 							}
 						],
 						"internalType": "struct Marketplace.SelledNFT[]",
-						"name": "",
+						"name": "_ret",
 						"type": "tuple[]"
 					}
 				],
@@ -831,6 +851,25 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					}
+				],
+				"name": "isManySellAllowed",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "isMarketPlaceContract",
 				"outputs": [
@@ -940,6 +979,34 @@
 						"type": "address"
 					},
 					{
+						"internalType": "uint256[]",
+						"name": "_tokenIds",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "_erc20",
+						"type": "address"
+					}
+				],
+				"name": "sellManyNFT",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "collection",
+						"type": "address"
+					},
+					{
 						"internalType": "uint256",
 						"name": "_tokenId",
 						"type": "uint256"
@@ -995,6 +1062,19 @@
 					}
 				],
 				"name": "setFeeReceiver",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address[]",
+						"name": "newManySellAllowed",
+						"type": "address[]"
+					}
+				],
+				"name": "setManySellAllowed",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -1108,11 +1188,11 @@
 	},
 	"sources": {
 		"source/Marketplace.sol": {
-			"keccak256": "0x0739b54049bc08f1ec7d16ead6e9ae60e56b2c7cdf19bd23a223014a989b9267",
+			"keccak256": "0xbf828330a6008ecc05edd7da308e8964195da3fb7720228b4e704957c79246d5",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://1913bc1473984cd216d365c6d4d1bd83f55e9711fbda6f1d8a9532f08ced3246",
-				"dweb:/ipfs/QmasCiw4aHTTVEKahxncSjxStcbbveftCGvQWLdC5CegaB"
+				"bzz-raw://4170e7ecbfc3fd01d4b3ff7d20bc823400d45183e0c3fbcc0c76b186f8456596",
+				"dweb:/ipfs/QmeJm32xT3Vn3L4fk8uCi1LUPQoxaxRL8rJGszg7DP7yC4"
 			]
 		}
 	},

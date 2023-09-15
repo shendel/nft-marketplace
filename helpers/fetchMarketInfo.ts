@@ -9,6 +9,7 @@ import { Interface as AbiInterface } from '@ethersproject/abi'
 import { CHAIN_INFO } from "./constants"
 
 import { callMulticall } from './callMulticall'
+import Web3ObjectToArray from "./Web3ObjectToArray"
 
 
 const fetchMarketInfo = (options) => {
@@ -20,7 +21,11 @@ const fetchMarketInfo = (options) => {
     onlyInfo,
     userAddress,
     forAddress,
+    offset,
+    limit,
   } = {
+    offset: 0,
+    limit: 0,
     onlyTokens: false,
     onlyInfo: false,
     userAddress: false,
@@ -45,11 +50,17 @@ const fetchMarketInfo = (options) => {
           calls: 
             (userAddress)
               ? {
-                tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress, 0, 0] }
+                ...((collectionAddress)
+                  ? {
+                    tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress, offset, limit] }
+                  } : {
+                    tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress, offset, limit] }
+                  }
+                ),
               } : (onlyTokens)
                 ? {
                   tokensAtSaleCount:        { func: 'getTokensAtSaleCount' },
-                  tokensAtSale:             { func: 'getTokensAtSale', args: [ 0, 0 ]},
+                  tokensAtSale:             { func: 'getTokensAtSale', args: [offset, limit ]},
                 } : {
                   isMPContract:             { func: 'isMarketPlaceContract' },
                   owner:                    { func: 'owner' },
@@ -65,18 +76,28 @@ const fetchMarketInfo = (options) => {
                   ...((!onlyInfo && !collectionAddress)
                     ? {
                       tokensAtSaleCount:    { func: 'getTokensAtSaleCount' },
-                      tokensAtSale:         { func: 'getTokensAtSale', args: [0, 0] },
+                      tokensAtSale:         { func: 'getTokensAtSale', args: [ offset, limit ] },
                     } : {}
                   ),
                   ...((collectionAddress)
                     ? {
-                      tokensAtSale:         { func: 'getCollectionTokensAtSale', args: [ collectionAddress, 0, 0 ] },
+                      tokensAtSale:         { func: 'getCollectionTokensAtSale', args: [ collectionAddress, offset, limit ] },
                     } : {}
                   ),
                   allowedERC20:             { func: 'getAllowedERC20' },
                   feeReceiver:              { func: 'getFeeReceiver' },
                 }
         }).then((mcAnswer) => {
+          if (mcAnswer.tokensAtSale) {
+            mcAnswer.tokensAtSale = Web3ObjectToArray(mcAnswer.tokensAtSale)
+          }
+          if (mcAnswer.tokens) {
+            mcAnswer.tokens = Web3ObjectToArray(mcAnswer.tokens)
+          }
+          if (offset == 0 && limit == 0) {
+            if (mcAnswer.tokensAtSale) mcAnswer.tokensAtSale = mcAnswer.tokensAtSale.reverse()
+            if (mcAnswer.tokens) mcAnswer.tokens = mcAnswer.tokens.reverse()
+          }
           if (mcAnswer.collectionListing) {
             let _collectionListing = {}
             Object.keys(mcAnswer.collectionListing).map((key) => {

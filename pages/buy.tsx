@@ -148,9 +148,7 @@ const Market: NextPage = (props) => {
   }
 
   const doSetTokensAtSale = (tokens) => {
-    setTokensAtSale(Web3ObjectToArray(tokens).sort((a,b) => {
-      return Number(a.utx) > Number(b.utx) ? -1 : 1
-    }))
+    setTokensAtSale(tokens)
   }
   const [ needRefreshTokens, setNeedRefreshTokens ] = useState(false)
   useEffect(() => {
@@ -161,7 +159,7 @@ const Market: NextPage = (props) => {
         chainId,
         onlyTokens: true,
       }).then((info) => {
-        doSetTokensAtSale(Web3ObjectToArray(info.tokensAtSale))
+        doSetTokensAtSale(info.tokensAtSale)
       })
     }
   }, [ needRefreshTokens ])
@@ -181,7 +179,7 @@ const Market: NextPage = (props) => {
         setMarketInfo(_marketInfo)
         
         setTokensAtSaleCount(_marketInfo.tokensAtSaleCount)
-        doSetTokensAtSale(Web3ObjectToArray(_marketInfo.tokensAtSale))
+        doSetTokensAtSale(_marketInfo.tokensAtSale)
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)
       }).catch((err) => {
