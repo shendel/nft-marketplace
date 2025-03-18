@@ -204,12 +204,12 @@ const Market: NextPage = (props) => {
   useEffect(() => {
     if (marketInfo) {
       fetchTokensListInfo({
-        erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
+        erc20list: Web3ObjectToArray(marketInfo.allowedERC20).filter((adr) => { return adr !== ZERO_ADDRESS }),
         chainId,
       }).then((answ) => {
         setAllowedERC20Info(answ)
       }).catch((err) => {
-        console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
+        console.log('>> fail fetch allowedERC20 token info', marketInfo.erc20, err)
       })
     }
   }, [ marketInfo ])

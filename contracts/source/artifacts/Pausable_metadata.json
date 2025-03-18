@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.18+commit.87f61d96"
+		"version": "0.8.1+commit.df193b15"
 	},
 	"language": "Solidity",
 	"output": {
@@ -74,26 +74,26 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"source/Marketplace.sol": "Pausable"
+			"source/MarketplaceNew.sol": "Pausable"
 		},
-		"evmVersion": "paris",
+		"evmVersion": "istanbul",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
 			"enabled": true,
-			"runs": 99999
+			"runs": 200
 		},
 		"remappings": []
 	},
 	"sources": {
-		"source/Marketplace.sol": {
-			"keccak256": "0xbf828330a6008ecc05edd7da308e8964195da3fb7720228b4e704957c79246d5",
+		"source/MarketplaceNew.sol": {
+			"keccak256": "0xd74e8f3e4df7d935918076338f9c221789a33e1ac59f8ce22a379f082a0bed2c",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://4170e7ecbfc3fd01d4b3ff7d20bc823400d45183e0c3fbcc0c76b186f8456596",
-				"dweb:/ipfs/QmeJm32xT3Vn3L4fk8uCi1LUPQoxaxRL8rJGszg7DP7yC4"
+				"bzz-raw://db9a3d9fe459bb5623144f32535956ee5f47b3c75d9e553f5c38cfe82047878b",
+				"dweb:/ipfs/QmU9o93zR7MwXhzHQhQ9ADfPFjmFgc8ast23xwrHXiBrew"
 			]
 		}
 	},

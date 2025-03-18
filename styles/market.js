@@ -3596,5 +3596,40 @@ footer {
 		font-size: 4.5rem;
 		line-height: 1
 	}
+  
+  
+}
+.active {
+  background-color: rgb(91 56 113);
+}
+.volumeHolder {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  margin-top: 2.25rem;
+  gap: .75rem;
+  width: 900px;
+  display: flex;
+  margin-top: 1rem;
+  justify-content: space-between;
+}
+.volumeHolder P {
+  display: block;
+  margin-bottom: 0.5rem;
+  width: 33%;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+  padding-left: .75rem;
+  padding-right: .75rem;
+  background-color: rgb(48 27 61);
+  border-radius: 3px;
+}
+.volumeHolder P SPAN {
+  display: block;
+  text-align: center;
+}
+@media (max-width:800px) {
+  .volumeHolder P {
+    width: 100%;
+  }
 }
 `

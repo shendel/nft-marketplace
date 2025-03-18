@@ -7,7 +7,7 @@ import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
 import Web3ObjectToArray from "/helpers/Web3ObjectToArray"
 import { fromWei } from "/helpers/wei"
 import fetchBalance from "/helpers/fetchBalance"
-import { CHAIN_INFO } from "/helpers/constants"
+import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 
 export default function WalletModal(options) {
   const {
@@ -42,7 +42,7 @@ export default function WalletModal(options) {
         chainId: marketplaceChainId,
         onlyInfo: true
       }).then((info) => {
-        setAllowedTokens(Web3ObjectToArray(info.allowedERC20))
+        setAllowedTokens(Web3ObjectToArray(info.allowedERC20).filter((adr) => { return adr !== ZERO_ADDRESS }))
 
       }).catch((err) => {
         console.log('WalletInfo - fail fetch market info', err)

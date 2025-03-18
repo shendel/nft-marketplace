@@ -14,6 +14,7 @@ import NftCard from "/components/market/NftCard"
 import CollectionCard from "/components/market/CollectionCard"
 
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
+import fetchUserAuctions from "/helpers/fetchUserAuctions"
 import fetchNFTManyCollectionInfo from "/helpers/fetchNFTManyCollectionInfo"
 import { fetchNftMetadata } from "/helpers/fetchNftMetadata"
 
@@ -73,6 +74,23 @@ const ProfilePage: NextPage = (props) => {
       })
     }
   }, [ chainId, marketplaceContract, connectedAddress ])
+  
+  const [ allowedERC20Info, setAllowedERC20Info ] = useState(false)
+  
+  useEffect(() => {
+    if (marketInfo) {
+      console.log('>>> marketInfo.allowedERC20', marketInfo.allowedERC20)
+      fetchTokensListInfo({
+        erc20list: Web3ObjectToArray(marketInfo.allowedERC20).filter((adr) => { return adr !== ZERO_ADDRESS }),
+        chainId,
+      }).then((answ) => {
+        console.log('>>>> INFO ERC20', answ, marketInfo.allowedERC20)
+        setAllowedERC20Info(answ)
+      }).catch((err) => {
+        console.log('>> fail fetch allowedERC20 token info',  err)
+      })
+    }
+  }, [ marketInfo ])
   
   useEffect(() => {
     if (storageData
@@ -152,6 +170,47 @@ const ProfilePage: NextPage = (props) => {
     }
   }, [ marketInfo ])
 
+  const [ userAuctionsMetaUrls, setUserAuctionsMetaUrls ] = useState(false)
+  const [ userAuctions, setUserAuctions ] = useState(false)
+  const [ userAuctionsFetching, setUserAuctionsFetching ] = useState(false)
+  const [ blockchainUtx, setBlockchainUtx ] = useState(false)
+  
+  useEffect(() => {
+    if (connectedAddress) {
+      setUserAuctionsMetaUrls(false)
+      fetchUserAuctions({
+        address: marketplaceContract,
+        chainId,
+        userAddress: connectedAddress
+      }).then((answer) => {
+        console.log('>>> User auctions', answer)
+        setUserAuctions(answer.userOffers)
+        setBlockchainUtx(answer.timestamp)
+        const tokensInfo = answer.userOffers.map(({ collection, tokenId }) => {
+          return {
+            address: collection,
+            tokenId
+          }
+        })
+        console.log('>>> tokensInfo', tokensInfo)
+        
+        fetchManyNftContent({
+          chainId,
+          tokensInfo,
+        }).then((tokensInfo) => {
+          setUserAuctionsMetaUrls(tokensInfo)
+        }).catch((err) => {
+          console.log('>>>> fail fetch tokens urls', err)
+        })
+      }).catch((err) => {
+        console.log('fail fetch user auctions', err)
+      })
+    } else {
+      setUserAuctions(false)
+      setUserAuctionsMetaUrls(false)
+    }
+  }, [ connectedAddress ])
+  
   return (
   <>
     <style jsx>
@@ -161,11 +220,11 @@ const ProfilePage: NextPage = (props) => {
       <Header {...props} />
       <div className="pt-10 md:pt-12 lg:pt-16 xl:pt-20 m flex flex-col items-center w-full">
         <div className="flex flex-col items-center md:items-start">
-          <h2 className="font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100">
-            Your listed NFTs
-          </h2>
           {!connectedAddress && (
             <>
+              <h2 className="font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100">
+                Your listed NFTs
+              </h2>
               <p className="text-center mt-10 lg:mt-12 opacity-80 text-lg md:text-left text-red-400 w-3/4">
                 {`Please connect your wallet`}
               </p>
@@ -178,6 +237,38 @@ const ProfilePage: NextPage = (props) => {
           )}
           {connectedAddress && (
             <>
+              <h2 className="font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100">
+                Your auctions
+              </h2>
+              {(userAuctions && userAuctions.length > 0) ? (
+                <div style={{ marginTop: '1rem', marginBottom: '2rem' }} className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
+                  {userAuctions.map((tokenInfo, index) => {
+                    const { tokenId, collection } = tokenInfo
+                    const mediaUrl = userAuctionsMetaUrls[`${collection}_${tokenId}`]?.tokenURI || false
+                    return (
+                      <div key={index}>
+                        <NftCard 
+                          mediaUrl={mediaUrl}
+                          collection={collection}
+                          tokenId={tokenId}
+                          tokenInfo={tokenInfo}
+                          chainId={chainId}
+                          isDeList={true}
+                          userAddress={connectedAddress}
+                          allowedERC20Info={allowedERC20Info}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="mt-[14px] lg:mt-6 text-xl opacity-80" style={{ paddingBottom: '2rem' }}>
+                  {`You have no active or completed auctions.`}
+                </p>
+              )}
+              <h2 className="font-GoodTimes tracking-wide flex items-center text-3xl lg:text-4xl bg-clip-text text-transparent bg-gradient-to-br from-moon-gold to-indigo-100">
+                Your listed NFTs
+              </h2>
               <p className="mt-[14px] lg:mt-6 text-xl opacity-80">
                 {`Pick from a collection`}
               </p>

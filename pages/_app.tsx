@@ -287,6 +287,7 @@ console.log(storageData)
                     storageFooterMenu={storageFooterMenu}
                     getText={getText}
                     getDesign={getDesign}
+                    isInstalled={storageData?.isInstalled}
                     iframeHideMenu={iframeHideMenu}
                   />
                 </>

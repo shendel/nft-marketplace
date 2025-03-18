@@ -41,7 +41,7 @@ const fetchNftContent = (options) => {
           const _ret = {}
           Object.keys(mcAnswer).forEach((tokenId) => {
             if (tokenId !== `baseExtension`) {
-              if (mcAnswer.baseExtension) {
+              if (mcAnswer.baseExtension && (mcAnswer[tokenId].substr(-mcAnswer.baseExtension.length) != mcAnswer.baseExtension)) {
                 _ret[tokenId] = `${mcAnswer[tokenId]}${tokenId}${mcAnswer.baseExtension}`
               } else {
                 _ret[tokenId] = mcAnswer[tokenId]

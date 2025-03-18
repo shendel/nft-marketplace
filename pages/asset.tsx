@@ -17,13 +17,17 @@ import fetchNftContent from "/helpers/fetchNftContent"
 
 import fetchNFTCollectionMeta from "/helpers/fetchNFTCollectionMeta"
 import fetchMarketTokenInfo from "/helpers/fetchMarketTokenInfo"
+import fetchMarketAuctionInfo from "/helpers/fetchMarketAuctionInfo"
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
 import fetchNFTTokenOwner from "/helpers/fetchNFTTokenOwner"
+import listenMarketEvents from "/helpers/listenMarketEvents"
+
 import AddressBlock from "/components/market/AddressBlock"
 
 import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
 
 import BuyButton from "/components/market/BuyButton"
+import BidButton from "/components/market/BidButton"
 import useWeb3 from "/helpers/useWeb3"
 
 import Button from "/components/market/Button"
@@ -47,27 +51,32 @@ const MarketAsset: NextPage = (props) => {
   const [
     _collectionAddress,
     _tokenId,
-    _isSellOpened,
+    _isSellOrAuctionOpened,
+    _offerId,
   ] = (router.asPath.split('#')[1] || '').split('/');
 
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
   const [ tokenId, setTokenId ] = useState(_tokenId)
-  const [ isSellOpened, setIsSellOpened ] = useState((_isSellOpened == `sell`))
-  
+  const [ isSellOpened, setIsSellOpened ] = useState((_isSellOrAuctionOpened == `sell`))
+  const [ isAuctionOpened, setIsAuctionOpened ] = useState((_isSellOrAuctionOpened == 'auction'))
+  const [ auctionOfferId, setAuctionOfferId ] = useState(_offerId)
   // HAsH ROUTER
   useEffect(() => {
     const onHashChangeStart = (url) => {
       const [
         _collectionAddress,
         _tokenId,
-        _isSellOpened,
+        _isSellOrAuctionOpened,
+        _offerId
       ] = (url.split('#')[1] || '').split('/');
       setCollectionAddress(_collectionAddress)
       setTokenId(_tokenId)
       setMarketTokenInfo(false)
       setSellCurrency(false)
       setIsSellCurrencyFetched(false)
-      setIsSellOpened(_isSellOpened == `sell`)
+      setIsSellOpened(_isSellOrAuctionOpened == `sell`)
+      setIsAuctionOpened(_isSellOrAuctionOpened == 'auction')
+      setAuctionOfferId(_offerId)
     }
     router.events.on("hashChangeStart", onHashChangeStart)
     return () => { router.events.off("hashChangeStart", onHashChangeStart) }
@@ -92,15 +101,31 @@ const MarketAsset: NextPage = (props) => {
         setMarketTokenInfo(answ.tokenInfo)
         setTokenNotListening(false)
       } else {
+        console.log('>>> NOT LISTED')
         setTokenNotListening(true)
+        if (isAuctionOpened && auctionOfferId) {
+          console.log('>>> THIS IS AUCTION HISTORY')
+          fetchMarketAuctionInfo({
+            marketAddress: marketplaceContract,
+            chainId,
+            offerId: auctionOfferId
+          }).then((answer) => {
+            setMarketTokenInfo(answer)
+            setTokenNotListening(false)
+          }).catch((err) => {
+            console.log('>>> Fail fetch offer info', err)
+          })
+        }
       }
     }).catch((err) => {
       console.log('>>> Fail fetch market token info', err)
     })
   }
+
   useEffect(() => {
     if (chainId && tokenId && collectionAddress && marketplaceContract) {
       _doFetchMarketTokenInfo()
+      
     }
   }, [ collectionAddress, chainId, tokenId, marketplaceContract ])
   
@@ -219,7 +244,7 @@ const MarketAsset: NextPage = (props) => {
   const switchIsSellOpened = () => {
     setIsSellOpened(!isSellOpened)
   }
-
+console.log('>>>> marketTokenInfo', marketTokenInfo)
   return (
     <>
       <Header {...props} />
@@ -386,49 +411,58 @@ const MarketAsset: NextPage = (props) => {
               {!tokenNotListening && (
                 <>
                   <AddressBlock label={`Seller`} address={marketTokenInfo?.seller} />
-                  <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
-                    <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
-                      <p className="text-white opacity-60 mt-1 p-[2px]">Price</p>
-                      {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
-                        <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
-                          {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
-                          {` `}
-                          {sellCurrency.symbol}
-                          {/*
-                          <p
-                            className="text-white opacity-60 mt-1 p-[2px]" 
-                            style={{marginTop: '12px'}}
-                          >Expiration</p>
-                          <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">01.01.2030 @ 09:00:00</div>
-                          */}
-                        </div>
-                      ) : (
-                        <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
-                          <div style={{
-                            width: '100%',
-                            height: '16px',
-                            borderRadius: 'inherit'
-                          }}
-                          className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"></div>
-                        </div>
-                      )}
-                      <div></div>
+                  {!marketTokenInfo?.isBitable && (
+                    <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
+                      <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
+                        <p className="text-white opacity-60 mt-1 p-[2px]">Price</p>
+                        {isSellCurrencyFetched && sellCurrency && marketTokenInfo && marketTokenInfo.price ? (
+                          <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
+                            {fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                            {` `}
+                            {sellCurrency.symbol}
+                          </div>
+                        ) : (
+                          <div className="text-[18px] leading-6 font-semibold text-white text-opacity-90 m-0 rounded-lg">
+                            <div style={{
+                              width: '100%',
+                              height: '16px',
+                              borderRadius: 'inherit'
+                            }}
+                            className="w-full bg-gradient-to-r from-[#333] via-[#555] to-[#333] bg-cover animate-pulse max-h-full min-h-[12px] p-[2px] m-[2px]"></div>
+                          </div>
+                        )}
+                        <div></div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   {(
                     marketTokenInfo
                     && connectedAddress
                     && (marketTokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase())
                   ) && (
-                    <div className="flex justify-evenly items-center">
-                      <DeListingButton
-                        chainId={chainId}
-                        marketplaceContract={marketplaceContract}
-                        collectionAddress={collectionAddress}
-                        tokenId={tokenId}
-                        onDelist={doTokenInfoReload}
-                      />
-                    </div>
+                    <>
+                      {marketTokenInfo.isBitable ? (
+                        <BidButton 
+                          chainId={chainId}
+                          marketplaceContract={marketplaceContract}
+                          marketTokenInfo={marketTokenInfo}
+                          price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                          onBuy={doTokenInfoReload}
+                          currencyDecimals={sellCurrency.decimals}
+                          currency={sellCurrency.symbol}
+                        />
+                      ) : (
+                        <div className="flex justify-evenly items-center">
+                          <DeListingButton
+                            chainId={chainId}
+                            marketplaceContract={marketplaceContract}
+                            collectionAddress={collectionAddress}
+                            tokenId={tokenId}
+                            onDelist={doTokenInfoReload}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                   {(
                     isSellCurrencyFetched
@@ -441,16 +475,30 @@ const MarketAsset: NextPage = (props) => {
                     )
                     && marketTokenInfo.price
                   ) && (
-                    <div className="flex justify-evenly items-center">
-                      <BuyButton 
-                        chainId={chainId}
-                        marketplaceContract={marketplaceContract}
-                        marketTokenInfo={marketTokenInfo}
-                        price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
-                        onBuy={doTokenInfoReload}
-                        currency={sellCurrency.symbol}
-                      />
-                    </div>
+                    <>
+                      {marketTokenInfo.isBitable ? (
+                        <BidButton 
+                          chainId={chainId}
+                          marketplaceContract={marketplaceContract}
+                          marketTokenInfo={marketTokenInfo}
+                          price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                          onBuy={doTokenInfoReload}
+                          currencyDecimals={sellCurrency.decimals}
+                          currency={sellCurrency.symbol}
+                        />
+                      ) : (
+                        <div className="flex justify-evenly items-center">
+                          <BuyButton 
+                            chainId={chainId}
+                            marketplaceContract={marketplaceContract}
+                            marketTokenInfo={marketTokenInfo}
+                            price={fromWei(marketTokenInfo.price, sellCurrency.decimals)}
+                            onBuy={doTokenInfoReload}
+                            currency={sellCurrency.symbol}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}

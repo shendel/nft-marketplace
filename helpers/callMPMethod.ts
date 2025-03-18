@@ -51,6 +51,9 @@ const callMPMethod = (options) => {
             resolve(res)
             onFinally(res)
           })
+          .catch((err) => {
+            console.log('>>> CALL MP ERROR', err)
+          })
       } else {
         reject('NO_ACTIVE_ACCOUNT')
       }

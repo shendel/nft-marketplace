@@ -37,14 +37,17 @@ export const callMulticall = (options) => {
     const mcCalls = Object.keys(calls).map((targetKey) => {
       const {
         func,
-        args
+        args,
+        target: _target,
+        encoder: _encoder,
       } = calls[targetKey]
       mcCallToValue.push(targetKey)
       return {
-        target,
-        callData: encoder.encodeFunctionData(func, args)
+        target: (_target) ? _target : target,
+        callData: ((_encoder) ? _encoder : encoder).encodeFunctionData(func, args)
       }
     })
+    
     PromiseChunksCall({
       args: mcCalls,
       chunkSize,
@@ -55,7 +58,8 @@ export const callMulticall = (options) => {
     }).then((answers) => {
       answers.forEach((retData, index) => {
         if (retData.success) {
-          let val = encoder.decodeFunctionResult(
+          let _encoder = (calls[mcCallToValue[index]].encoder) ? calls[mcCallToValue[index]].encoder : encoder
+          let val = _encoder.decodeFunctionResult(
             calls[mcCallToValue[index]].func,
             retData.returnData
           )[0]

@@ -51,7 +51,7 @@ export default function BuyButton(options) {
     callMPMethod({
       activeWeb3,
       contractAddress: marketplaceContract,
-      method: marketTokenInfo.erc20 == ZERO_ADDRESS ? 'buyNFT' : 'buyNFTbyERC20',
+      method: 'buyNFT',
       ...(marketTokenInfo.erc20 == ZERO_ADDRESS
         ? {
           weiAmount: marketTokenInfo.price.toString()
@@ -59,7 +59,7 @@ export default function BuyButton(options) {
       ),
       args: [
         marketTokenInfo.collection,
-        marketTokenInfo.tokenId.toString()
+        marketTokenInfo.tokenId.toString(),
       ],
       onTrx: (txHash) => {
         console.log('>> onTrx', txHash)

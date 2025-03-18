@@ -39,6 +39,7 @@ const fetchNFTManyCollectionInfo = (options) => {
           hiddenMetadataUri:{ func: 'hiddenMetadataUri' },
           baseExtension:    { func: 'baseExtension' },
           zeroTokenURI:     { func: 'tokenURI', args: [0] },
+          oneTokenURI:      { func: 'tokenURI', args: [1] },
           symbol:           { func: 'symbol' },
           ...((forAddress)
               ? {
@@ -65,6 +66,14 @@ const fetchNFTManyCollectionInfo = (options) => {
           multicall,
           calls,
         }).then((mcAnswer) => {
+          addressList.forEach((collectionAddress) => {
+            if (!mcAnswer[collectionAddress].zeroTokenURI && mcAnswer[collectionAddress].oneTokenURI) {
+              mcAnswer[collectionAddress].zeroTokenURI = mcAnswer[collectionAddress].oneTokenURI
+            }
+          })
+          if (!mcAnswer.zeroTokenURI && mcAnswer.oneTokenURI) {
+            mcAnswer.zeroTokenURI = mcAnswer.oneTokenURI
+          }
           resolve(mcAnswer)
         }).catch((err) => {
           console.log('>>> Fail fetch many nft meta', err)

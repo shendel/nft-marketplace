@@ -126,6 +126,9 @@ export default function Header(props) {
             margin-top: -8px;
             margin-left: -10px;
         }
+        .logo {
+          max-height: 3em;
+        }
         `}
       </style>
       <div className="py-4 pl-4 pr-3 relative z-50 md:bg-white md:bg-opacity-5 lg:py-5 lg:px-[30px]">
@@ -134,11 +137,13 @@ export default function Header(props) {
           <div className="flex items-center gap-4 lg:gap-7 xl:gap-9 2xl:gap-11">
             <a className="lg:hidden" href={getLink(`index`)}>
               <img
+                className="logo"
                 src={getDesign('logoUriMobile', `uri`, getAssets(`images/logo.png`, 'logoUriMobile'))}
               />
             </a>
             <a className="hidden lg:block" href={getLink(`index`)}>
               <img
+                className="logo"
                 src={getDesign('logoUriDesktop', `uri`, getAssets(`images/logo.png`, 'logoUriDesktop'))}
               />
             </a>

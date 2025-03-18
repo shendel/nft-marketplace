@@ -93,20 +93,28 @@ export default function SellNftForm(options) {
   useEffect(() => {
     if (marketInfo) {
       fetchTokensListInfo({
-        erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
+        erc20list: Web3ObjectToArray(marketInfo.allowedERC20).filter((adr) => { return adr !== ZERO_ADDRESS }),
         chainId,
       }).then((answ) => {
         setAllowedERC20Info(answ)
         setAllowedERC20InfoFetched(true)
       }).catch((err) => {
-        console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
+        console.log('>> fail fetch allowedERC20 token info', marketInfo.erc20, err)
       })
     }
   }, [ marketInfo ])
   
+  const AuctionDurations = {
+    '86400': '1 day',
+    '604800': '1 week',
+    '2678400': '1 mounth',
+    '31536000': '1 year'
+  }
   const [ tradeFee, setTradeFee ] = useState(0)
   const [ sellCurrency, setSellCurrency ] = useState(ZERO_ADDRESS)
   const [ sellPrice, setSellPrice ] = useState(0)
+  const [ isAuction, setIsAuction ] = useState(0)
+  const [ auctionDuration, setAuctionDuration ] = useState(0)
   const [ sellPriceWithFee, setSellPriceWithFee ] = useState(0)
   const [ hasSellPriceError, setHasSellPriceError ] = useState(false)
   
@@ -188,7 +196,9 @@ export default function SellNftForm(options) {
             ? nativeCurrency.decimals
             : allowedERC20Info[sellCurrency].decimals
         ),
-        sellCurrency
+        sellCurrency,
+        (isAuction == "1") ? true : false,
+        auctionDuration
       ],
       onTrx: (txHash) => {
         console.log('>> onTrx', txHash)
@@ -324,12 +334,25 @@ export default function SellNftForm(options) {
             padding-left: 0.5em;
             padding-right: 0.5em;
           }
+          DIV.form SELECT.fullWidth {
+            max-width: none;
+            width: 100%;
+          }
         `}
       </style>
       <div className="flex flex-col w-full relative grow bg-transparent rounded-2xl overflow-hidden mt-8 mb-6">
         <div className="p-4 pl-5 rounded-xl bg-white bg-opacity-[0.13] w-full m-0 mb-3">
           <p className="text-white opacity-60 mt-1 p-[2px]">
-            Price:
+            Type:
+          </p>
+          <div className="form">
+            <select className="fullWidth" value={isAuction} onChange={(e) => { setIsAuction(e.target.value) }}>
+              <option value={0}>Fixed price</option>
+              <option value={1}>Auction</option>
+            </select>
+          </div>
+          <p className="text-white opacity-60 mt-1 p-[2px]">
+            {isAuction ? `Start Price:` : `Price:`}
           </p>
           <div className="form">
             <input 
@@ -358,6 +381,22 @@ export default function SellNftForm(options) {
               )}
             </select>
           </div>
+          {isAuction == "1" && (
+            <>
+              <p className="text-white opacity-60 mt-1 p-[2px]">
+                Auction duration:
+              </p>
+              <div className="form">
+                <select className="fullWidth" value={auctionDuration} onChange={(e) => { setAuctionDuration(e.target.value) }}>
+                  {Object.keys(AuctionDurations).map((duration) => {
+                    return (
+                      <option key={duration} value={duration}>{AuctionDurations[duration]}</option>
+                    )
+                  })}
+                </select>
+              </div>
+            </>
+          )}
           {Number(tradeFee) > 0 && (
             <div className="info">
               <p className="text-white opacity-60 mt-1 p-[2px]">Marketplace fee: {tradeFee}%</p>

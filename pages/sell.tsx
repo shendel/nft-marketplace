@@ -99,7 +99,7 @@ const SellPage: NextPage = (props) => {
             let collectionMetaJson = false
             let collectionZeroJson = false
             let collectionOneJson = false
-            
+
             if (collectionsInfo[nftAddress].contractURI) {
               try {
                 collectionMetaJson = await fetchNftMetadata(ipfsUrl(collectionsInfo[nftAddress].contractURI))

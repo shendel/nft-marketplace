@@ -35,6 +35,16 @@ export const CURRENCIES = {
     name: 'ALV',
     symbol: 'ALV',
     decimals: 18
+  },
+  CRO: {
+    name: 'CRO',
+    symbol: 'CRO',
+    decimals: 18
+  },
+  BROCK: {
+    name: 'BROCK',
+    symbol: 'BROCK',
+    decimals: 18
   }
 }
 
@@ -53,16 +63,44 @@ export const MULTICALL_CONTRACTS = {
   42161: '0x80C7DD17B01855a6D2347444a0FCC36136a314de',
   421611: '0xf27ee99622c3c9b264583dacb2cce056e194494f',
   250: '0x22D4cF72C45F8198CfbF4B568dBdB5A85e8DC0B5',
-  3797: '0x48d7ac38530697aDB91061B6D141C8c763edE565'
+  3797: '0x48d7ac38530697aDB91061B6D141C8c763edE565',
+  25: '0x9a0abe9db9e01de47ea85fbbc073494479d55180', // Cronoscan
+  7171: '0x83048f0Bf34FEeD8CEd419455a4320A735a92e9d' // BROCK
 }
 
 export const AVAILABLE_NETWORKS_INFO = [
+  {
+    slub: 'bitrock',
+    chainName: 'Bit-Rock',
+    chainId: '0x1C03',
+    networkVersion: 7171,
+    rpcUrls: ['https://brockrpc.io'],
+    blockExplorerUrls: ['https://explorer.bit-rock.io/'],
+    isTestnet: false,
+    nativeCurrency: CURRENCIES.BROCK,
+    multicall: '0x83048f0Bf34FEeD8CEd419455a4320A735a92e9d',
+    storage: '0xd152CD6F9cf76921759d3f51f743651e549f6925',
+    exStorage: '0x2f87D23cd8d788bC9a32E540cdd8253F9b1F54CF'
+  },
+  {
+    slub: 'cronos_mainnet',
+    chainName: 'Cronos',
+    chainId: '0x19',
+    networkVersion: 25,
+    rpcUrls: ['https://evm.cronos.org'],
+    blockExplorerUrls: ['https://alveyscan.com/'],
+    isTestnet: false,
+    nativeCurrency: CURRENCIES.CRO,
+    multicall: '0x48d7ac38530697aDB91061B6D141C8c763edE565',
+    storage: '',
+    exStorage: ''
+  },
   {
     slub: 'alv_mainnet',
     chainName: 'AlveyChain',
     chainId: '0xED5',
     networkVersion: 3797,
-    rpcUrls: ['https://rpc2.alvey.io/rpc'],
+    rpcUrls: ['https://rpc.alveycoin.com/rpc'], // ['https://rpc2.alvey.io/rpc'],
     blockExplorerUrls: ['https://alveyscan.com/'],
     isTestnet: false,
     nativeCurrency: CURRENCIES.ALV,

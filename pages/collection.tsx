@@ -29,6 +29,9 @@ import useUrlHash from "/helpers/useUrlHash"
 import Button from "/components/market/Button"
 import ImgPrecache from "/components/market/ImgPrecache"
 
+import { ZERO_ADDRESS, CHAIN_INFO } from "/helpers/constants"
+import { BigNumber } from "ethers"
+import { fromWei } from '/helpers/wei'
 
 const MarketCollection: NextPage = (props) => {
   const {
@@ -46,12 +49,16 @@ const MarketCollection: NextPage = (props) => {
   const [
     _collectionAddress,
     _action,
+    _bestOfferSource,
   ] = (router.asPath.split('#')[1] || '').split('/');
   
   const [ collectionAddress, setCollectionAddress ] = useState(_collectionAddress)
+  const [ isListed, setIsListed ] = useState(!_action)
   const [ isSell, setIsSell ] = useState(_action == `sell`)
   const [ isMy, setIsMy ] = useState(_action == `my_listed`)
   const [ isAll, setIsAll ] = useState(_action == `all`)
+  const [ isBestOffer, setIsBestOffer ] = useState(_action == 'best_offers')
+  const [ bestOfferSource, setBestOfferSource ] = useState(_bestOfferSource)
   
   const urlHash = useUrlHash()
   
@@ -60,12 +67,16 @@ const MarketCollection: NextPage = (props) => {
     if (urlHash) {
       const [
         _collectionAddress,
-        _action
+        _action,
+        _bestOfferSource,
       ] = urlHash.split('/')
       setCollectionAddress(_collectionAddress)
+      setIsListed(!_action)
       setIsSell(_action == `sell`)
       setIsMy(_action == `my_listed`)
       setIsAll(_action == `all`)
+      setIsBestOffer(_action == 'best_offers')
+      setBestOfferSource(_bestOfferSource)
       setViewOffset(0)
     }
   }, [ urlHash ])
@@ -110,7 +121,13 @@ const MarketCollection: NextPage = (props) => {
   const [ marketInfo, setMarketInfo ] = useState(false)
   const [ marketInfoFetched, setMarketInfoFetched ] = useState(false)
   const [ tokensAtSale, setTokensAtSale ] = useState([])
+  const [ bestOffersTokens, setBestOffersTokens ] = useState([])
+  const [ floorPrice, setFloorPrice ] = useState({})
+  const [ bestPrice, setBestPrice ] = useState({})
+  const [ marketVolume, setMarketVolume ] = useState({})
+
   const [ tokensAtSaleFetching, setTokensAtSaleFetching ] = useState(true)
+  
   const [ userTokensAtSale, setUserTokensAtSale ] = useState([])
   
   const [ allTokens, setAllTokens ] = useState([])
@@ -141,6 +158,42 @@ const MarketCollection: NextPage = (props) => {
     }
   }, [isAll])
 
+  const _processBestOffers = (tokens) => {
+    console.log('>>> PROCESS BEST OFFERS', tokens)
+    const byERC20 = {}
+    const floorPrice = {}
+    const marketVolume = {}
+    const bestPrice = {}
+    tokens.forEach((token) => {
+      if (!byERC20[token.erc20]) {
+        byERC20[token.erc20] = []
+        floorPrice[token.erc20] = BigNumber.from(0)
+        marketVolume[token.erc20] = BigNumber.from(0)
+        bestPrice[token.erc20] = BigNumber.from(token.price)
+      }
+      byERC20[token.erc20].push(token)
+      marketVolume[token.erc20] = marketVolume[token.erc20].add(token.price)
+      if (BigNumber.from(token.price).lt(bestPrice[token.erc20])) bestPrice[token.erc20] = BigNumber.from(token.price)
+    })
+    let _tokens = []
+    Object.keys(byERC20).forEach((erc20) => {
+      _tokens = [
+        ..._tokens,
+        ...byERC20[erc20].sort((a,b) => {
+          return (BigNumber.from(a.price).gt(b.price)) ? 1 : -1
+        })
+      ]
+      floorPrice[erc20] = marketVolume[erc20].div(byERC20[erc20].length).toString()
+      marketVolume[erc20] = marketVolume[erc20].toString()
+    })
+    setBestOffersTokens(_tokens)
+    setFloorPrice(floorPrice)
+    setMarketVolume(marketVolume)
+    setBestPrice(bestPrice)
+    console.log(_tokens)
+    console.log(floorPrice)
+    console.log(marketVolume)
+  }
   useEffect(() => {
     if (chainId && marketplaceContract) {
       setTokensAtSaleFetching(true)
@@ -154,7 +207,7 @@ const MarketCollection: NextPage = (props) => {
         setMarketInfo(_marketInfo)
 
         setTokensAtSale(_marketInfo.tokensAtSale)
-
+        _processBestOffers(_marketInfo.tokensAtSale)
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)
 
@@ -171,13 +224,15 @@ const MarketCollection: NextPage = (props) => {
   
   useEffect(() => {
     if (marketInfo) {
+      console.log('>>> marketInfo.allowedERC20', marketInfo.allowedERC20)
       fetchTokensListInfo({
-        erc20list: Web3ObjectToArray(marketInfo.allowedERC20),
+        erc20list: Web3ObjectToArray(marketInfo.allowedERC20).filter((adr) => { return adr !== ZERO_ADDRESS }),
         chainId,
       }).then((answ) => {
+        console.log('>>>> INFO ERC20', answ, marketInfo.allowedERC20)
         setAllowedERC20Info(answ)
       }).catch((err) => {
-        console.log('>> fail fetch allowedERC20 token info', marketTokenInfo.erc20, err)
+        console.log('>> fail fetch allowedERC20 token info',  err)
       })
     }
   }, [ marketInfo ])
@@ -231,12 +286,38 @@ const MarketCollection: NextPage = (props) => {
   const [ userTokens, setUserTokens ] = useState([])
   const [ userTokensFetched, setUserTokensFetched ] = useState(false)
   const [ userTokensFetching, setUserTokensFetching ] = useState(false)
-  
+  const [ userTokensFetchCurrent, setUserTokensFetchCurrent ] = useState(0)
+  const [ userTokensFetchTotal, setUserTokensFetchTotal ] = useState(0)
+
   
   useEffect(() => {
     if (chainId && collectionAddress && connectedAddress && collectionInfo) {
       setUserTokensFetched(false)
       setUserTokensFetching(true)
+      fetchNFTCollectionAllTokens({
+        chainId,
+        collectionAddress,
+        chunkSize: 200,
+        userAddress: connectedAddress,
+        onFetching: (cursorPos, total) => {
+          setUserTokensFetchCurrent(cursorPos)
+          setUserTokensFetchTotal(total)
+        }
+      }).then((result) => {
+        const answer = Web3ObjectToArray(result).filter((tokenInfo) => {
+          //return (tokenInfo && tokenInfo.ownerOf.toLowerCase() == '0x9277eE6EfEB5FE9581738F157612795C57DffAF0'.toLowerCase())
+          return (tokenInfo && tokenInfo.ownerOf.toLowerCase() == connectedAddress.toLowerCase())
+        })
+        setUserTokens(answer)
+        setUserTokensFetched(true)
+        setUserTokensFetching(false)
+
+      }).catch((err) => {
+        setAllTokensFetching(false)
+        console.log('>>> fetchNFTCollectionAllTokens', err)
+      })
+      
+      /*
       fetchUserNfts({
         chainId,
         walletAddress: connectedAddress,
@@ -270,6 +351,7 @@ const MarketCollection: NextPage = (props) => {
       }).catch((err) => {
         console.log('Fail fetch user tokens', err)
       })
+      */
     }
   }, [ chainId, collectionAddress, collectionInfo, connectedAddress ])
   
@@ -325,6 +407,12 @@ const MarketCollection: NextPage = (props) => {
   if (!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll && (viewOffset + viewLimit) < tokensAtSale.length ) showLoadMore = true
   if (isAll && !allTokensFetching && (viewOffset + viewLimit) < allTokens.length) showLoadMore = true
   
+  const infoPanelItemStyle = `w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between`
+  const infoPanelBest = `w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between`
+  
+  
+  const chainInfo = CHAIN_INFO(chainId)
+  
   return (
     <>
       <Header {...props} />
@@ -334,8 +422,8 @@ const MarketCollection: NextPage = (props) => {
       <main className="px-6 pt-10 md:pt-12 lg:pt-16 flex flex-col items-center w-full">
         {collectionInfo && (
           <div className="flex flex-col items-center md:flex-row md:items-start md:gap-12 lg:gap-16 xl:gap-20">
-            <div>
-              {collectionInfo.image && (
+            {collectionInfo.image && (
+              <div>
                 <ImgPrecache
                   style={{
                     objectFit: 'contain',
@@ -346,8 +434,8 @@ const MarketCollection: NextPage = (props) => {
                   alt={`${collectionInfo.name} thumbnail`}
                   src={ipfsUrl(collectionInfo.image)}
                 />
-              )}
-            </div>
+              </div>
+            )}
             <div className="mt-4 md:mt-0 xl:-mt-4">
               <div className="mt-8 w-[320px] md:w-[420px] xl:w-[520px] ">
                 <h2 className="mt-8 font-GoodTimes text-2xl md:text-3xl xl:text-4xl  bg-clip-text text-transparent bg-gradient-to-b from-indigo-100 via-moon-orange to-moon-secondary">
@@ -364,7 +452,7 @@ const MarketCollection: NextPage = (props) => {
                 </p>
                 */}
                 <a href={getLink('collection', `${collectionAddress}`)}>
-                  <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                  <p className={`${infoPanelItemStyle} ${(isListed) ? 'active' : ''}`}>
                     Listed
                     <span className="max-w-[60px] truncate xl:max-w-[90px]">
                       {marketInfo ? marketInfo.collectionListing[collectionAddress] : 0 }
@@ -374,7 +462,7 @@ const MarketCollection: NextPage = (props) => {
                 {connectedAddress && (
                   <>
                     <a href={getLink('collection', `${collectionAddress}/my_listed`)}>
-                      <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                      <p className={`${infoPanelItemStyle} ${(isMy) ? 'active' : ''}`}>
                         Your listed
                         <span className="max-w-[60px] truncate xl:max-w-[90px]">
                           {marketInfo && marketInfo.userCollectionListed ? marketInfo.userCollectionListed[collectionAddress] : 0 }
@@ -382,7 +470,7 @@ const MarketCollection: NextPage = (props) => {
                       </p>
                     </a>
                     <a href={getLink('collection', `${collectionAddress}/sell`)}>
-                      <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                      <p className={`${infoPanelItemStyle} ${(isSell) ? 'active' : ''}`}>
                         Your NFTs
                         <span className="max-w-[60px] truncate xl:max-w-[90px]">
                           {collectionInfo?.balance || 0 }
@@ -392,13 +480,47 @@ const MarketCollection: NextPage = (props) => {
                   </>
                 )}
                 <a href={getLink('collection', `${collectionAddress}/all`)}>
-                  <p className="w-[149px] xl:w-[189px] rounded-[3px] bg-[#301B3D] py-[6px] xl:py-2 px-[10px] xl:px-3 flex items-center justify-between">
+                  <p className={`${infoPanelItemStyle} ${(isAll) ? 'active' : ''}`}>
                     Supply
                     <span className="max-w-[60px] truncate xl:max-w-[90px]">
                       {collectionInfo.totalSupply || 0 }
                     </span>
                   </p>
                 </a>
+              </div>
+              <div className="mt-7 xl:mt-9 grid grid-cols-1 gap-3 text-sm xl:text-base w-[320px] xl:w-[400px]">
+                {bestPrice[ZERO_ADDRESS] && (
+                  <a href={getLink('collection', `${collectionAddress}/best_offers/${ZERO_ADDRESS}`)}>
+                    <p style={{ width: '394px' }} className={`${infoPanelItemStyle} ${(isBestOffer && ZERO_ADDRESS == bestOfferSource) ? 'active' : ''}`}>
+                      Best Offer
+                      <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                        {fromWei(bestPrice[ZERO_ADDRESS], chainInfo.nativeCurrency.decimals)}
+                        {` `}
+                        {chainInfo.nativeCurrency.symbol}
+                      </span>
+                    </p>
+                  </a>
+                )}
+                {allowedERC20Info && (
+                  <>
+                    {Object.keys(bestPrice).map((erc20) => {
+                      if (erc20 != ZERO_ADDRESS) {
+                        return (
+                          <a key={erc20} href={getLink('collection', `${collectionAddress}/best_offers/${erc20}`)}>
+                            <p style={{ width: '394px' }} className={`${infoPanelItemStyle} ${(isBestOffer && erc20 == bestOfferSource) ? 'active' : ''}`}>
+                              Best Offer
+                              <span className="max-w-[60px] truncate xl:max-w-[90px]">
+                                {fromWei(bestPrice[erc20], allowedERC20Info[erc20].decimals)}
+                                {` `}
+                                {allowedERC20Info[erc20].symbol}
+                              </span>
+                            </p>
+                          </a>
+                        )
+                      }
+                    })}
+                  </>
+                )}
               </div>
               <div className="mt-8 xl:mt-9 max-w-[320px] xl:max-w-[420px]">
                 <p className=" xl:text-base xl:leading-loose text-sm font-light leading-relaxed">
@@ -422,17 +544,47 @@ const MarketCollection: NextPage = (props) => {
         )}
         {((!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll) && (
           <>
-            {renderSubHeader(`NFTs listed at Marketplace`)}
+            {isBestOffer
+              ? renderSubHeader('Best offers')
+              : renderSubHeader(`NFTs listed at Marketplace`)
+            }
             {tokensAtSaleFetching && renderLoader(`Fetching`)}
           </>
         )}
         {isSell && connectedAddress && (
           <>
             {renderSubHeader(`Your not listed NFTs`)}
-            {userTokensFetching && renderLoader(`Fetching`)}
+            {userTokensFetching && renderLoader(`Fetching ${(userTokensFetchTotal > 0) ? Math.round(userTokensFetchCurrent/userTokensFetchTotal*100) : 0}%`)}
           </>
         )}
-        
+        {isBestOffer && !tokensAtSaleFetching && allowedERC20Info && (
+          <div className="volumeHolder">
+            <p>
+              <span>Floor Price</span>
+              <span>
+                {fromWei(floorPrice[bestOfferSource], (bestOfferSource == ZERO_ADDRESS) ? chainInfo.nativeCurrency.decimals : allowedERC20Info[bestOfferSource].decimals)}
+                {` `}
+                {(bestOfferSource == ZERO_ADDRESS) ? chainInfo.nativeCurrency.symbol : allowedERC20Info[bestOfferSource].symbol}
+              </span>
+            </p>
+            <p>
+              <span>Top Offer</span>
+              <span>
+                {fromWei(bestPrice[bestOfferSource], (bestOfferSource == ZERO_ADDRESS) ? chainInfo.nativeCurrency.decimals : allowedERC20Info[bestOfferSource].decimals)}
+                {` `}
+                {(bestOfferSource == ZERO_ADDRESS) ? chainInfo.nativeCurrency.symbol : allowedERC20Info[bestOfferSource].symbol}
+              </span>
+            </p>
+            <p>
+              <span>Total Volume</span>
+              <span>
+                {fromWei(marketVolume[bestOfferSource], (bestOfferSource == ZERO_ADDRESS) ? chainInfo.nativeCurrency.decimals : allowedERC20Info[bestOfferSource].decimals)}
+                {` `}
+                {(bestOfferSource == ZERO_ADDRESS) ? chainInfo.nativeCurrency.symbol : allowedERC20Info[bestOfferSource].symbol}
+              </span>
+            </p>
+          </div>
+        )}
         <div className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
           {isAll && (
             <>
@@ -486,7 +638,12 @@ const MarketCollection: NextPage = (props) => {
           )}
           {(!tokensAtSaleFetching && (!isMy || !connectedAddress) && (!isSell || !connectedAddress) && !isAll) && (
             <>
-              {tokensAtSale.slice(0, viewOffset + viewLimit).map((tokenInfo, index) => {
+              {((isBestOffer)
+                ? bestOffersTokens.filter((token) => {
+                  return (token.erc20 == bestOfferSource)
+                })
+                : tokensAtSale
+              ).slice(0, viewOffset + viewLimit).map((tokenInfo, index) => {
                 const {
                   tokenId,
                 } = tokenInfo
@@ -511,15 +668,11 @@ const MarketCollection: NextPage = (props) => {
           )}
           {userTokensFetched && isSell && connectedAddress && (
             <>
-              {userTokens.slice(0, viewOffset + viewLimit).map(( { tokenId } = tokenInfo, index) => {
+              {userTokens.slice(0, viewOffset + viewLimit).map(( { tokenURI, tokenId } = tokenInfo, index) => {
                 return (
                   <div key={index}>
                     <NftCard 
-                      mediaUrl={
-                        (tokensUrls[collectionAddress] && tokensUrls[collectionAddress][tokenId.toString()])
-                        ? tokensUrls[collectionAddress][tokenId.toString()]
-                        : false
-                      }
+                      mediaUrl={tokenURI}
                       collection={collectionAddress}
                       tokenId={tokenId}
                       chainId={chainId}

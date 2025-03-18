@@ -49,7 +49,7 @@ const fetchNFTCollectionAllTokens = (options) => {
           if (mcAnswer.maxSupply) maxSupply = mcAnswer.maxSupply
           
           const mcCalls = {}
-          for (let tokenId = 1; tokenId < (maxSupply || totalSupply); tokenId++) {
+          for (let tokenId = 1; tokenId <= (totalSupply || maxSupply); tokenId++) {
             mcCalls[`${tokenId}_tokenURI`] = { func: 'tokenURI', args: [tokenId] }
             mcCalls[`${tokenId}_ownerOf`] = { func: 'ownerOf', args: [tokenId] }
           }
@@ -69,7 +69,9 @@ const fetchNFTCollectionAllTokens = (options) => {
                 _ret[tokenId][field] = tokenAnswer[tokenId_field]
                 _ret[tokenId].tokenId = tokenId
                 if (mcAnswer.baseExtension && field == `tokenURI`) {
-                  _ret[tokenId][field] = `${_ret[tokenId][field]}${tokenId}${mcAnswer.baseExtension}`
+                  if (_ret[tokenId][field].substr(-mcAnswer.baseExtension.length) !== mcAnswer.baseExtension) {
+                    _ret[tokenId][field] = `${_ret[tokenId][field]}${tokenId}${mcAnswer.baseExtension}`
+                  }
                 }
               }
             })
