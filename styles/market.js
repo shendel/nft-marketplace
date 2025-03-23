@@ -3627,9 +3627,41 @@ footer {
   display: block;
   text-align: center;
 }
+.bestHolder {
+  padding-right: 5px;
+}
+.bestHolder A {
+  display: block;
+  padding-top: 10px;
+  padding-bottom: 6px;
+}
+.bestHolder A P {
+  display: flex;
+  background-color: rgb(48 27 61);
+  border-radius: 3px;
+  border-radius: 3px;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  justify-content: space-between;
+}
+.bestHolder A P.active {
+  background-color: rgb(91 56 113);
+}
+@media (max-width: 1024px) {
+  .volumeHolder {
+    width: 100%
+  }
+}
 @media (max-width:800px) {
+  .volumeHolder {
+    flex-direction: column
+  }
   .volumeHolder P {
     width: 100%;
+    font-size: .875rem;
+    padding: 0.25rem;
+    margin-bottom: 0;
   }
 }
 `

@@ -490,10 +490,10 @@ const MarketCollection: NextPage = (props) => {
                   </p>
                 </a>
               </div>
-              <div className="mt-7 xl:mt-9 grid grid-cols-1 gap-3 text-sm xl:text-base w-[320px] xl:w-[400px]">
+              <div className="bestHolder w-[320px] xl:w-[400px]">
                 {bestPrice[ZERO_ADDRESS] && (
                   <a href={getLink('collection', `${collectionAddress}/best_offers/${ZERO_ADDRESS}`)}>
-                    <p style={{ width: '394px' }} className={`${infoPanelItemStyle} ${(isBestOffer && ZERO_ADDRESS == bestOfferSource) ? 'active' : ''}`}>
+                    <p className={`${(isBestOffer && ZERO_ADDRESS == bestOfferSource) ? 'active' : ''}`}>
                       Best Offer
                       <span className="max-w-[60px] truncate xl:max-w-[90px]">
                         {fromWei(bestPrice[ZERO_ADDRESS], chainInfo.nativeCurrency.decimals)}
