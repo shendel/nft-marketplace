@@ -22,6 +22,10 @@ export default function NftCard(props) {
     collection: _collection,
     userAddress,
     isShow,
+    blockchainUtx,
+    wonCollect,
+    loseCollect,
+    isWinner,
   } = {
     isShow: false,
     tokenId: false,
@@ -31,6 +35,7 @@ export default function NftCard(props) {
     isSell: false,
     isDeList: false,
     userAddress: false,
+    blockchainUtx: false,
     ...props,
   }
   const chainInfo = CHAIN_INFO(chainId)
@@ -129,7 +134,8 @@ export default function NftCard(props) {
       router.push(buyLink.replace('_MYAPP/',''))
     }
   }
-  console.log('>>> tokenInfo', tokenInfo)
+  //console.log('>>> tokenInfo', tokenInfo)
+  const auctionIsOut = (tokenInfo.isBitable && Number(tokenInfo.endAt) < Number(blockchainUtx)) ? true : false
   return (
     <>
       <article className="relative group overflow-hidden">
@@ -204,16 +210,45 @@ export default function NftCard(props) {
           <div className="mt-5 pr-9 flex flex-col items-end">
             <p className="font-bold text-xl">#{tokenId}</p>
             <button onClick={goToBuy} className="absolute top-12 mt-10 border-[0.5px] hover:scale-105 px-[10px] py-[4px] transition-all duration-150 hover:bg-slate-900 rounded-tl-[10px] rounded-br-[10px]">
-
               <a>
-                {isDeList
-                  ? (tokenInfo.isBitable) ? `At auction` : `De-List`
-                  : (isSell)
-                    ? `Sell now`
-                    : (isShow)
-                      ? `More info`
-                      : (tokenInfo.isBitable) ? 'Bid' : `Buy now`
-                }
+                {tokenInfo.isBitable ? (
+                  <>
+                    {isDeList ? (
+                      <>
+                        {auctionIsOut
+                          ? (tokenInfo.status == '2') ? `Ended` : `Ended - Claim`
+                          : `Running`
+                        }
+                      </>
+                    ) : (
+                      <>
+                        {auctionIsOut ? (
+                          <>
+                            {(!wonCollect && !loseCollect)
+                              ? `Ended`
+                              : (
+                              <>
+                                {wonCollect && 'Win! Collect'}
+                                {loseCollect && 'Lose. Refund'}
+                              </>
+                            )}
+                          </>
+                        ) : `Bid`}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {isDeList
+                      ? (tokenInfo.isBitable) ? `At auction` : `De-List`
+                      : (isSell)
+                        ? `Sell now`
+                        : (isShow)
+                          ? `More info`
+                          : (tokenInfo.isBitable) ? 'Bid' : `Buy now`
+                    }
+                  </>
+                )}
               </a>
             </button>
           </div>

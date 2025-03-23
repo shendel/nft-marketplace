@@ -170,6 +170,8 @@ const Market: NextPage = (props) => {
     }
   }, [ marketInfoFetched, tokensAtSale ])
 
+  const [ blockchainUtx, setBlockchainUtx ] = useState(0)
+  
   useEffect(() => {
     if (chainId && marketplaceContract) {
       fetchMarketInfo({
@@ -179,6 +181,7 @@ const Market: NextPage = (props) => {
         setMarketInfo(_marketInfo)
         
         setTokensAtSaleCount(_marketInfo.tokensAtSaleCount)
+        setBlockchainUtx(_marketInfo.timestamp)
         doSetTokensAtSale(_marketInfo.tokensAtSale)
         setTokensAtSaleFetching(false)
         setMarketInfoFetched(true)
@@ -367,6 +370,7 @@ const Market: NextPage = (props) => {
                             ? tokensUrls[tokenInfo.collection][tokenId.toString()]
                             : false
                           }
+                          blockchainUtx={blockchainUtx}
                           tokenInfo={tokenInfo}
                           allowedERC20Info={allowedERC20Info}
                           chainId={chainId}

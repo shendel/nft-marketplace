@@ -1,4 +1,5 @@
 export function getCurrentDomain() {
+  //return 'market.bitrockwallet.com'
   return 'localhost.nftstake'
   //return 'nftmarket.angeldao.info'
   //return 'shendel.github.io'

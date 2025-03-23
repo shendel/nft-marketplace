@@ -8,6 +8,8 @@ import BigNumber from "bignumber.js"
 import approveToken from "/helpers/approveToken"
 
 import Button from "./Button"
+import fetchBalance from '/helpers/fetchBalance'
+import fetchTokenBalance from '/helpers/fetchTokenBalance'
 
 export default function BuyButton(options) {
   const {
@@ -34,7 +36,43 @@ export default function BuyButton(options) {
     switchChainId
   } = useWeb3(chainId)
 
-
+  const [ isBalanceFetching, setIsBalanceFetching ] = useState(false)
+  const [ userBalance, setUserBalance ] = useState(0)
+  
+  const doFetchUserBalance = () => {
+    if (address && marketTokenInfo) {
+      setIsBalanceFetching(true)
+      if (marketTokenInfo.erc20 == ZERO_ADDRESS) {
+        fetchBalance({
+          address,
+          chainId
+        }).then((balance) => {
+          setUserBalance(balance)
+          setIsBalanceFetching(false)
+        }).catch((err) => {
+          console.log('Fail fetch user balance', err)
+          setUserBalance(0)
+          setIsBalanceFetching(false)
+        })
+      } else {
+        fetchTokenBalance(
+          address,
+          marketTokenInfo.erc20,
+          chainId
+        ).then(({ wei }) => {
+          setUserBalance(wei)
+          setIsBalanceFetching(false)
+        }).catch((err) => {
+          console.log('Fail fetch user balance', err)
+          setIsBalanceFetching(false)
+        })
+      }
+    }
+  }
+  useEffect(() => {
+    doFetchUserBalance()
+  }, [ address, marketTokenInfo ])
+  
   const addNotify = (msg, style) => {
 
   }
@@ -79,7 +117,15 @@ export default function BuyButton(options) {
     })
   }
 
+  const [ isEnoughtBalance, setIsEnoughtBalance ] = useState(false)
+  useEffect(() => {
+    if (marketTokenInfo) {
+      setIsEnoughtBalance(!new BigNumber(marketTokenInfo.price).isGreaterThan(userBalance))
+    }
+  }, [ userBalance, marketTokenInfo ])
+  
   const [ isApproving, setIsApproving ] = useState(false)
+  
 
   const doApproveAndBuy = (lotIndex) => {
     addNotify(`Approving... Confirm transaction`)
@@ -152,13 +198,21 @@ export default function BuyButton(options) {
             </Button>
           ) : (
             <>
-              {(marketTokenInfo.erc20 !== ZERO_ADDRESS && isSellCurrencyFetched && needApprove) ? (
-                <Button onClick={doApproveAndBuy} isLoading={isApproving || isBuyLot}>
-                  Approve & Buy 1 for {price} {currency}
-                </Button>
+              {isEnoughtBalance ? (
+                <>
+                  {(marketTokenInfo.erc20 !== ZERO_ADDRESS && isSellCurrencyFetched && needApprove) ? (
+                    <Button onClick={doApproveAndBuy} isLoading={isApproving || isBuyLot}>
+                      Approve & Buy 1 for {price} {currency}
+                    </Button>
+                  ) : (
+                    <Button onClick={doBuyLot} isLoading={isBuyLot}>
+                      Buy 1 for {price} {currency}
+                    </Button>
+                  )}
+                </>
               ) : (
-                <Button onClick={doBuyLot} isLoading={isBuyLot}>
-                  Buy 1 for {price} {currency}
+                <Button disabled={true}>
+                  Not enough balance
                 </Button>
               )}
             </>

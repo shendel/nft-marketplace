@@ -42,7 +42,8 @@ const fetchMarketInfo = (options) => {
 
         const multicall = new web3.eth.Contract(MulticallAbi, MULTICALL_CONTRACTS[chainId])
         const abiI = new AbiInterface(MarketContractAbi)
-
+        const mcI = new AbiInterface(MulticallAbi)
+        
         callMulticall({
           multicall,
           target: address,
@@ -57,15 +58,20 @@ const fetchMarketInfo = (options) => {
                     tokens:                     { func: 'getUserTokensAtSale', args: [ userAddress, offset, limit] }
                   }
                 ),
+                timestamp:                { func: 'getCurrentBlockTimestamp', target: MULTICALL_CONTRACTS[chainId], encoder: mcI },
               } : (onlyTokens)
                 ? {
                   tokensAtSaleCount:        { func: 'getTokensAtSaleCount' },
                   tokensAtSale:             { func: 'getTokensAtSale', args: [offset, limit ]},
+                  timestamp:                { func: 'getCurrentBlockTimestamp', target: MULTICALL_CONTRACTS[chainId], encoder: mcI },
                 } : {
                   isMPContract:             { func: 'isMarketPlaceContract' },
                   owner:                    { func: 'owner' },
+                  minAuctionIncrement:      { func: 'minAuctionIncrement' },
+                  bidAddTimer:              { func: 'bidAddTimer' },
                   version:                  { func: 'version' },
                   nftCollections:           { func: 'getAllowedCollections' },
+                  timestamp:                { func: 'getCurrentBlockTimestamp', target: MULTICALL_CONTRACTS[chainId], encoder: mcI },
                   collectionListing:        { func: 'getCollectionsTokensCount' },
                   ...((forAddress)
                     ? {
@@ -94,10 +100,12 @@ const fetchMarketInfo = (options) => {
           if (mcAnswer.tokens) {
             mcAnswer.tokens = Web3ObjectToArray(mcAnswer.tokens)
           }
+          /*
           if (offset == 0 && limit == 0) {
             if (mcAnswer.tokensAtSale) mcAnswer.tokensAtSale = mcAnswer.tokensAtSale.reverse()
             if (mcAnswer.tokens) mcAnswer.tokens = mcAnswer.tokens.reverse()
           }
+          */
           if (mcAnswer.collectionListing) {
             let _collectionListing = {}
             Object.keys(mcAnswer.collectionListing).map((key) => {

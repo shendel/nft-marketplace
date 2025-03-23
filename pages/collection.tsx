@@ -130,6 +130,8 @@ const MarketCollection: NextPage = (props) => {
   
   const [ userTokensAtSale, setUserTokensAtSale ] = useState([])
   
+  const [ blockchainUtx, setBlockchainUtx ] = useState(0)
+  
   const [ allTokens, setAllTokens ] = useState([])
   const [ allTokensFetched, setAllTokensFetched ] = useState(false)
   const [ allTokensFetching, setAllTokensFetching ] = useState(false)
@@ -205,7 +207,7 @@ const MarketCollection: NextPage = (props) => {
       }).then((_marketInfo) => {
         console.log('>>> MARKET INFO', _marketInfo)
         setMarketInfo(_marketInfo)
-
+        setBlockchainUtx(_marketInfo.timestamp)
         setTokensAtSale(_marketInfo.tokensAtSale)
         _processBestOffers(_marketInfo.tokensAtSale)
         setTokensAtSaleFetching(false)
@@ -624,6 +626,7 @@ const MarketCollection: NextPage = (props) => {
                           ? tokensUrls[tokenInfo.collection][tokenId.toString()]
                           : false
                         }
+                        blockchainUtx={blockchainUtx}
                         tokenInfo={tokenInfo}
                         allowedERC20Info={allowedERC20Info}
                         chainId={chainId}
@@ -659,6 +662,7 @@ const MarketCollection: NextPage = (props) => {
                       tokenInfo={tokenInfo}
                       allowedERC20Info={allowedERC20Info}
                       chainId={chainId}
+                      blockchainUtx={blockchainUtx}
                       isDeList={connectedAddress && connectedAddress.toLowerCase() == tokenInfo.seller.toLowerCase()}
                     />
                   </div>

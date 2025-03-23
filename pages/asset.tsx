@@ -436,7 +436,9 @@ console.log('>>>> marketTokenInfo', marketTokenInfo)
                     </div>
                   )}
                   {(
-                    marketTokenInfo
+                    isSellCurrencyFetched
+                    && sellCurrency
+                    && marketTokenInfo
                     && connectedAddress
                     && (marketTokenInfo.seller.toLowerCase() == connectedAddress.toLowerCase())
                   ) && (

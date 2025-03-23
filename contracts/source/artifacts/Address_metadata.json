@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.1+commit.df193b15"
+		"version": "0.8.10+commit.fc410830"
 	},
 	"language": "Solidity",
 	"output": {
@@ -21,7 +21,7 @@
 		"compilationTarget": {
 			"source/MarketplaceNew.sol": "Address"
 		},
-		"evmVersion": "istanbul",
+		"evmVersion": "london",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -34,11 +34,11 @@
 	},
 	"sources": {
 		"source/MarketplaceNew.sol": {
-			"keccak256": "0xd74e8f3e4df7d935918076338f9c221789a33e1ac59f8ce22a379f082a0bed2c",
+			"keccak256": "0x2d3e3d458f7b4ebbb7f99f626e2d9e6ea99b81c2309f0dfa56de75675a10e742",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://db9a3d9fe459bb5623144f32535956ee5f47b3c75d9e553f5c38cfe82047878b",
-				"dweb:/ipfs/QmU9o93zR7MwXhzHQhQ9ADfPFjmFgc8ast23xwrHXiBrew"
+				"bzz-raw://b6f242d320373fc30e1d9be47d725c2e37bf4cca3bc1699377b6879d19d8ac80",
+				"dweb:/ipfs/QmWT13zsSAavjVTiGd3WPqgSH3KrUxNFCLzRQdTNuz8zrj"
 			]
 		}
 	},

@@ -105,6 +105,7 @@ export default function SellNftForm(options) {
   }, [ marketInfo ])
   
   const AuctionDurations = {
+    '600': 'test - (10 minutes)',
     '86400': '1 day',
     '604800': '1 week',
     '2678400': '1 mounth',
@@ -114,7 +115,7 @@ export default function SellNftForm(options) {
   const [ sellCurrency, setSellCurrency ] = useState(ZERO_ADDRESS)
   const [ sellPrice, setSellPrice ] = useState(0)
   const [ isAuction, setIsAuction ] = useState(0)
-  const [ auctionDuration, setAuctionDuration ] = useState(0)
+  const [ auctionDuration, setAuctionDuration ] = useState(86400)
   const [ sellPriceWithFee, setSellPriceWithFee ] = useState(0)
   const [ hasSellPriceError, setHasSellPriceError ] = useState(false)
   
@@ -215,6 +216,9 @@ export default function SellNftForm(options) {
         setIsSelling(false)
         onSell()
       }
+    }).catch((err) => {
+      console.log('>>> ERR', err)
+      setIsSelling(false)
     })
   }
   

@@ -46,6 +46,8 @@ export default function TabMarketplace(options) {
   const [ nftCollection, setNftCollection, nftCollectionError ] = useStateAddress('')
   const [ nftCollections, setNftCollections ] = useState([])
   const [ tradeFee, setTradeFee ] = useStateUint(10)
+  const [ minAuctionIncrement, setMinAuctionIncrement ] = useStateUint(10)
+  const [ bidAddTimer, setBidAddTimer ] = useStateUint(3600)
   const [ feeReceiver, setFeeReceiver ] = useStateAddress(activeAccount) 
   const [ allowedERC20, setAllowedERC20 ] = useState([])
   const [ isDeploying, setIsDeploying ] = useState(false)
@@ -171,9 +173,13 @@ export default function TabMarketplace(options) {
   const [ needReloadContract, setNeedReloadContract ] = useState(false)
   /* Edit MarketPlace */
   const [ isEditFeeReciever, setIsEditFeeReciever ] = useState(false)
+  const [ isEditMinAuctionIncrement, setIsEditMinAuctionIncrement ] = useState(false)
+  const [ isEditBidAddTimer, setIsEditBidAddTimer ] = useState(false)
   const [ newNftCollections, setNewNftCollections ] = useState(Web3ObjectToArray(deployedMPInfo?.nftCollections))
   const [ newFeeReciever, setNewFeeReciever ] = useStateAddress(deployedMPInfo?.feeReceiver)
   const [ newTradeFee, setNewTradeFee ] = useStateUint(deployedMPChainInfo?.tradeFee)
+  const [ newMinAuctionIncrement, setNewMinAuctionIncrement ] = useStateUint(deployedMPChainInfo?.minAuctionIncrement)
+  const [ newBidAddTimer, setNewBidAddTimer ] = useStateUint(deployedMPChainInfo?.bidAddTimer)
   const [ newAllowedERC20, setNewAllowedERC20 ] = useState(Web3ObjectToArray(deployedMPInfo?.allowedERC20))
 
   const [ isSaveMainSettings, setIsSaveMainSettings ] = useState(false)
@@ -457,6 +463,34 @@ export default function TabMarketplace(options) {
                       onEdit: () => { setNewTradeFee(deployedMPInfo.tradeFee) },
                       onSave: () => {
                         return saveMPSetting(`setTradeFee`, [newTradeFee])
+                      }
+                    }} />
+                    <AdminInfoRow {...{
+                      label: `Min Auction Increment %`,
+                      value: deployedMPInfo.minAuctionIncrement,
+                      canEdit: true,
+                      editView: () => {
+                        return (
+                          <input type="text" value={newMinAuctionIncrement} onChange={(e) => { setNewMinAuctionIncrement(e) }} />
+                        )
+                      },
+                      onEdit: () => { setNewMinAuctionIncrement(deployedMPInfo.minAuctionIncrement) },
+                      onSave: () => {
+                        return saveMPSetting(`setMinAuctionIncrement`, [newMinAuctionIncrement])
+                      }
+                    }} />
+                    <AdminInfoRow {...{
+                      label: `On Bid Add Timer amount (seconds)`,
+                      value: deployedMPInfo.bidAddTimer,
+                      canEdit: true,
+                      editView: () => {
+                        return (
+                          <input type="text" value={newBidAddTimer} onChange={(e) => { setNewBidAddTimer(e) }} />
+                        )
+                      },
+                      onEdit: () => { setNewBidAddTimer(deployedMPInfo.bidAddTimer) },
+                      onSave: () => {
+                        return saveMPSetting(`setBidAddTimer`, [newBidAddTimer])
                       }
                     }} />
                     <AdminInfoRow {...{

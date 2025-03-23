@@ -15,6 +15,8 @@ import CollectionCard from "/components/market/CollectionCard"
 
 import fetchTokensListInfo from "/helpers/fetchTokensListInfo"
 import fetchUserAuctions from "/helpers/fetchUserAuctions"
+import fetchUserAuctionsBids from "/helpers/fetchUserAuctionsBids"
+
 import fetchNFTManyCollectionInfo from "/helpers/fetchNFTManyCollectionInfo"
 import { fetchNftMetadata } from "/helpers/fetchNftMetadata"
 
@@ -68,6 +70,7 @@ const ProfilePage: NextPage = (props) => {
         forAddress: connectedAddress,
       }).then((_marketInfo) => {
         setMarketInfo(_marketInfo)
+        setBlockchainUtx(_marketInfo.timestamp)
         setMarketInfoFetched(true)
       }).catch((err) => {
         console.log('>>> fail fetch market info', err)
@@ -172,6 +175,8 @@ const ProfilePage: NextPage = (props) => {
 
   const [ userAuctionsMetaUrls, setUserAuctionsMetaUrls ] = useState(false)
   const [ userAuctions, setUserAuctions ] = useState(false)
+  const [ userAuctionsBids, setUserAuctionsBids ] = useState(false)
+  const [ auctionHighBids, setAuctionHighBids ] = useState(false)
   const [ userAuctionsFetching, setUserAuctionsFetching ] = useState(false)
   const [ blockchainUtx, setBlockchainUtx ] = useState(false)
   
@@ -186,6 +191,19 @@ const ProfilePage: NextPage = (props) => {
         console.log('>>> User auctions', answer)
         setUserAuctions(answer.userOffers)
         setBlockchainUtx(answer.timestamp)
+        const userOffersIds = answer.userOffers.map(({ offerId }) => { return offerId })
+        console.log('>>>> User offers', userOffersIds)
+        fetchUserAuctionsBids({
+          address: marketplaceContract,
+          chainId,
+          userAddress: connectedAddress,
+          offers: userOffersIds
+        }).then(({ bids, high }) => {
+          setAuctionHighBids(high)
+          setUserAuctionsBids(bids)
+        }).catch((err) => {
+          console.log('>>> Fail fetch user bids', err)
+        })
         const tokensInfo = answer.userOffers.map(({ collection, tokenId }) => {
           return {
             address: collection,
@@ -243,8 +261,29 @@ const ProfilePage: NextPage = (props) => {
               {(userAuctions && userAuctions.length > 0) ? (
                 <div style={{ marginTop: '1rem', marginBottom: '2rem' }} className="mt-20 md:mt-24 flex flex-col gap-10 md:grid md:grid-cols-2 md:grid-flow-row md:gap-12 xl:grid-cols-3 xl:gap-14">
                   {userAuctions.map((tokenInfo, index) => {
-                    const { tokenId, collection } = tokenInfo
+                    const { tokenId, collection, offerId, seller } = tokenInfo
                     const mediaUrl = userAuctionsMetaUrls[`${collection}_${tokenId}`]?.tokenURI || false
+                    let wonCollect = false
+                    let loseCollect = false
+                    let isWinner = true
+                    if (auctionHighBids
+                      && auctionHighBids[offerId]
+                      && auctionHighBids[offerId].toLowerCase() == connectedAddress.toLowerCase()
+                      && userAuctionsBids
+                      && userAuctionsBids[offerId]
+                      && userAuctionsBids[offerId] != "0"
+                    ) wonCollect = true
+                    if (auctionHighBids
+                      && auctionHighBids[offerId]
+                      && auctionHighBids[offerId].toLowerCase() != connectedAddress.toLowerCase()
+                      && userAuctionsBids
+                      && userAuctionsBids[offerId]
+                      && userAuctionsBids[offerId] != "0"
+                    ) loseCollect = true
+                    if (auctionHighBids
+                      && auctionHighBids[offerId]
+                      && auctionHighBids[offerId].toLowerCase() == connectedAddress.toLowerCase()
+                    ) isWinner = true
                     return (
                       <div key={index}>
                         <NftCard 
@@ -253,8 +292,12 @@ const ProfilePage: NextPage = (props) => {
                           tokenId={tokenId}
                           tokenInfo={tokenInfo}
                           chainId={chainId}
-                          isDeList={true}
+                          isDeList={(connectedAddress.toLowerCase() == seller.toLowerCase())}
                           userAddress={connectedAddress}
+                          blockchainUtx={blockchainUtx}
+                          wonCollect={wonCollect}
+                          loseCollect={loseCollect}
+                          isWinner={isWinner}
                           allowedERC20Info={allowedERC20Info}
                         />
                       </div>

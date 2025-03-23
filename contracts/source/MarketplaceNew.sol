@@ -1469,21 +1469,7 @@ contract Marketplace is Ownable, Pausable {
             });
         }
     }
-    /*
-    struct UserBids {
-        uint256 offerId;
-        uint256 bid;
-    }
-    function getUserBids(address user) public view returns (UserBids[] memory ret) {
-        ret = new UserBids[](userAuctions[user].length);
-        for (uint256 i = 0; i < userAuctions[user].length; i++) {
-            ret[i] = UserBids({
-                offerId: userAuctions[user][i],
-                bid: bids[userAuctions[user][i]][user]
-            });
-        }
-    }
-    */
+
     function getUserAuctions(address user) public view returns(SelledNFT[] memory ret) {
         ret = new SelledNFT[](userAuctions[user].length);
         for(uint256 i = 0; i < userAuctions[user].length; i++) {
@@ -1661,11 +1647,8 @@ contract Marketplace is Ownable, Pausable {
         return false;
     }
 
-    function withdrawWei() public onlyOwner {
-        //payable(msg.sender).transfer(address(this).balance);
-        (bool success, ) = msg.sender.call{value:address(this).balance}("");
-
-        require(success, "ERROR!!!! 'withdrawWei()' - Transfer failed.");
+    function withdrawNative(uint256 amount) public onlyOwner {
+        (bool success, ) = owner().call{value: amount}("");
     }
 
     function withdrawERC20(address erc20) public onlyOwner {
@@ -1793,8 +1776,7 @@ contract Marketplace is Ownable, Pausable {
         }
         highestBidder[offerId] = msg.sender;
 
-        uint256 incentive = lotInfo.price / minAuctionIncrement;
-        //lotInfo.price = lotInfo.price + incentive;
+        uint256 incentive = SafeMath.mul(SafeMath.div(lotInfo.price, 100), minAuctionIncrement);
         lotInfo.price = newBid + incentive;
         lotInfo.endAt = block.timestamp + bidAddTimer;
         _auctionListedNfts[offerId] = lotInfo;
@@ -1813,17 +1795,30 @@ contract Marketplace is Ownable, Pausable {
             }
         } else {
             IERC20 payToken = IERC20(lotInfo.erc20);
-            payToken.safeTransferFrom(
-                payer,
-                address(lotInfo.seller),
-                amountWithFee
-            );
-            if (feeAmount > 0) {
-                payToken.safeTransferFrom(
-                    payer,
-                    address(_feeReceiver),
-                    feeAmount
+            if (payer == address(this)) {
+                payToken.transfer(
+                    address(lotInfo.seller),
+                    amountWithFee
                 );
+                if (feeAmount > 0) {
+                    payToken.transfer(
+                        address(_feeReceiver),
+                        feeAmount
+                    );
+                }
+            } else {
+                payToken.transferFrom(
+                    payer,
+                    address(lotInfo.seller),
+                    amountWithFee
+                );
+                if (feeAmount > 0) {
+                    payToken.transferFrom(
+                        payer,
+                        address(_feeReceiver),
+                        feeAmount
+                    );
+                }
             }
         }
     }
@@ -1862,8 +1857,7 @@ contract Marketplace is Ownable, Pausable {
             payable(msg.sender).transfer(balance);
         } else {
             IERC20 payToken = IERC20(lotInfo.erc20);
-            payToken.safeTransferFrom(
-                address(address(this)),
+            payToken.transfer(
                 address(msg.sender),
                 balance
             );

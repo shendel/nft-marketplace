@@ -39,6 +39,7 @@ const fetchMarketBids = (options) => {
           calls: {
             tokenInfo: { func: 'marketTokensGet', args: [ collection, tokenId ] },
             bids: { func: 'getOfferBids', args: [ offerId ] },
+            highBidOwner: { func: 'highestBidder', args: [ offerId ] },
             timestamp: {
               func: 'getCurrentBlockTimestamp',
               target: MULTICALL_CONTRACTS[chainId],
