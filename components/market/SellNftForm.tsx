@@ -105,7 +105,6 @@ export default function SellNftForm(options) {
   }, [ marketInfo ])
   
   const AuctionDurations = {
-    '600': 'test - (10 minutes)',
     '86400': '1 day',
     '604800': '1 week',
     '2678400': '1 mounth',
@@ -385,6 +384,16 @@ export default function SellNftForm(options) {
               )}
             </select>
           </div>
+          {Number(tradeFee) > 0 && (
+            <div className="info">
+              <p className="text-white opacity-60 mt-1 p-[2px]">Marketplace fee: {tradeFee}%</p>
+              {sellPriceWithFee > 0 && (
+                <p className="text-white opacity-60 mt-1 p-[2px]">
+                  {`You are got ${sellPriceWithFee} ${tradeCurrencySymbol}`}
+                </p>
+              )}
+            </div>
+          )}
           {isAuction == "1" && (
             <>
               <p className="text-white opacity-60 mt-1 p-[2px]">
@@ -399,18 +408,15 @@ export default function SellNftForm(options) {
                   })}
                 </select>
               </div>
+              <div className="info">
+                <p className="text-white opacity-60 mt-1 p-[2px]">
+                  {`If the lot does not have any buyers, you will be able to remove the lot from the auction only after this period has expired.`}
+                </p>
+              </div>
+              
             </>
           )}
-          {Number(tradeFee) > 0 && (
-            <div className="info">
-              <p className="text-white opacity-60 mt-1 p-[2px]">Marketplace fee: {tradeFee}%</p>
-              {sellPriceWithFee > 0 && (
-                <p className="text-white opacity-60 mt-1 p-[2px]">
-                  {`You are got ${sellPriceWithFee} ${tradeCurrencySymbol}`}
-                </p>
-              )}
-            </div>
-          )}
+          
         </div>
       </div>
       <div className="flex justify-evenly items-center">
